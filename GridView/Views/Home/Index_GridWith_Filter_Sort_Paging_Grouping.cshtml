@@ -1,0 +1,18 @@
+﻿@using GridView.ViewModel;
+<link href="~/css/gridview.css" rel="stylesheet" />
+@model List<ProductSaleModel>
+
+<dynamic-grid items="@Model.Cast<object>().ToList()"
+              enable-paging="true"
+              enable-filtering="true"
+              enable-sorting="true"
+              enable-grouping="true">
+</dynamic-grid>
+
+
+<script src="~/js/gridview.js"></script>
+
+<script>
+
+</script>
+

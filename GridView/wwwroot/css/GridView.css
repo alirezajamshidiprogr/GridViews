@@ -1,0 +1,94 @@
+﻿.dynamic-grid-container {
+    font-family: Tahoma,sans-serif;
+    background: #f4f6f9;
+    padding: 10px;
+    direction: rtl;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+    .controls .left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .controls .right {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+.grid-container {
+    display: block;
+    margin-top: 10px;
+}
+
+.grid-header, .grid-row {
+    display: flex;
+}
+
+.grid-header {
+    font-weight: bold;
+    background: #3498db;
+    color: #fff;
+}
+
+    .grid-header .grid-cell, .grid-row .grid-cell {
+        flex: 1;
+        padding: 6px 8px;
+        border-bottom: 1px solid #ddd;
+        min-width: 100px;
+        box-sizing: border-box;
+    }
+
+.grid-filters {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+    .grid-filters input {
+        flex: 1;
+        padding: 4px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+    }
+
+.group-row {
+    font-weight: bold;
+    background: #f0f0f0;
+    padding: 6px;
+    margin-top: 4px;
+}
+
+.btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+    .btn.primary {
+        background: #3498db;
+        color: #fff;
+    }
+
+    .btn.danger {
+        background: #e74c3c;
+        color: #fff;
+    }
+
+.pagination {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}

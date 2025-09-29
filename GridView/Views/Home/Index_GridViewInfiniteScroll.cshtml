@@ -1,0 +1,17 @@
+﻿@using GridView.ViewModel;
+
+@model List<ProductSaleModel>
+
+<link href="~/css/infinitescroll_grid.css" rel="stylesheet" />
+
+<gridview-infinite-scroll
+                          fetch-url="@Url.Action("GetDataGrid","Home")"
+                          enable-filtering="true"
+                          enable-grouping="true"
+                          model-type="typeof(ProductSaleModel)"
+                          enable-sorting ="true">
+</gridview-infinite-scroll>
+
+
+
+<script src="~/js/infinitescroll_grid.js"></script>
