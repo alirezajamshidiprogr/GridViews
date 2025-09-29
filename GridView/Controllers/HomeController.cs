@@ -2,9 +2,13 @@
 using GridView.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Reflection;
+
 
 namespace GridView.Controllers
 {
@@ -32,7 +36,7 @@ namespace GridView.Controllers
             var statusList = new[] { "فعال", "غیرفعال" };
 
             var rand = new Random();
-            for (int i = 1; i <= 1000; i++)
+            for (int i = 1; i <= 100; i++)
             {
                 _products.Add(new ProductModel
                 {
@@ -140,7 +144,20 @@ namespace GridView.Controllers
                 {
                     if (!string.IsNullOrEmpty(f.Value))
                     {
-                        query = query.ToList().Where(p =>p.GetType().GetProperty(f.Key).GetValue(p)?.ToString().Contains(f.Value) ?? false ).AsQueryable();
+                        var prop = typeof(ProductModel).GetProperty(f.Key);
+                        if (prop != null)
+                        {
+                            var propType = prop.PropertyType;
+                            if (propType == typeof(string))
+                                query = query.Where($"{f.Key}.Contains(@0)", f.Value);
+                            else
+                                query = query.Where($"{f.Key}.ToString().Contains(@0)", f.Value);
+                        }
+                        else
+                        {
+                            // ستون پیدا نشد، می‌توانید لاگ بگیرید یا از ادامه فیلتر بگذرید
+                            continue;
+                        }
                     }
                 }
             }
@@ -148,20 +165,22 @@ namespace GridView.Controllers
             // مرتب‌سازی
             if (!string.IsNullOrEmpty(request.SortColumn))
             {
-                var prop = typeof(ProductModel).GetProperty(request.SortColumn);
-                query = request.SortAsc
-                    ? query.OrderBy(x => prop.GetValue(x, null))
-                    : query.OrderByDescending(x => prop.GetValue(x, null));
+                var sortExpr = request.SortAsc ? request.SortColumn : request.SortColumn + " descending";
+                query = query.OrderBy(sortExpr);
             }
 
             // گروه‌بندی (برای ارسال به JS فقط نام گروه‌ها)
             List<object> dataList;
             if (!string.IsNullOrEmpty(request.GroupBy))
             {
-                var groups = query.GroupBy(x => x.GetType().GetProperty(request.GroupBy).GetValue(x))
-                                  .SelectMany(g => new object[] { new { __group = true, name = g.Key } }.Concat(g))
-                                  .ToList();
-                dataList = groups;
+                dataList = query
+                 .AsEnumerable() // بعد از این خط داده‌ها در حافظه هستند
+                 .GroupBy(x => {
+                     var prop = x.GetType().GetProperty(request.GroupBy);
+                     return prop != null ? prop.GetValue(x) : null;
+                 })
+                 .SelectMany(g => new object[] { new { __group = true, name = g.Key ?? "بدون مقدار" } }.Concat(g))
+                 .ToList();
             }
             else
             {

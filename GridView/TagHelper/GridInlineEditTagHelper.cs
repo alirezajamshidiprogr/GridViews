@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text.Json;
 
 namespace YourProject.TagHelpers
 {
@@ -15,68 +17,69 @@ namespace YourProject.TagHelpers
         public bool EnableSorting { get; set; } = true;
         public bool EnableGrouping { get; set; } = true;
         public Type ModelType { get; set; }
-        //
+
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            // **حفظ تگ اصلی**
-            // output.TagName = "div"; // حذف شد
-
             output.Attributes.SetAttribute("class", "dynamic-grid-container");
-            output.Attributes.SetAttribute("fetch-url", FetchUrl); // fetch-url مستقیم
+            output.Attributes.SetAttribute("fetch-url", FetchUrl);
 
-            var columnMeta = new List<(string Name, string Header, bool Visible)>();
-            if (Items?.Any() == true)
+            var columnMeta = new List<object>();
+            Type type = Items?.Any() == true ? Items.First().GetType() : ModelType;
+
+            if (type != null)
             {
-                var type = Items.First().GetType();
-                foreach (var p in type.GetProperties())
+                foreach (var prop in type.GetProperties())
                 {
-                    columnMeta.Add((p.Name, p.Name, true));
+                    var attr = prop.GetCustomAttribute<GridColumnAttribute>();
+
+                    // تبدیل نام پراپرتی به camelCase
+                    var camelName = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
+
+                    columnMeta.Add(new
+                    {
+                        Name = prop.Name, // بدون تغییر به camelCase
+                        Header = attr?.Header ?? prop.Name,
+                        Visible = attr?.Visible ?? true,
+                        Editable = attr?.Editable ?? false
+                    });
                 }
             }
-            else if (ModelType != null)
-            {
-                foreach (var p in ModelType.GetProperties())
-                {
-                    columnMeta.Add((p.Name, p.Name, true));
-                }
-            }
 
-            var html = @"<div class='controls'>
-                            <div class='left'>
-                                <label>گروه‌بندی: 
-                                    <select id='groupBySelector'><option value=''>بدون گروه‌بندی</option></select>
-                                </label>
-                            </div>
-                            <div class='right'>
-                                <button id='refreshBtn' class='btn primary'>تازه‌سازی</button>
-                            </div>
-                        </div>";
+            var columnsJson = JsonSerializer.Serialize(columnMeta);
 
-            html += "<div class='grid-wrapper'><div class='grid-table'>";
+            var html = $@"
+<div class='grid-wrapper'>
+    <div class='controls'>
+        <div class='left'>
+            <label>گروه‌بندی: 
+                <select id='groupBySelector'><option value=''>بدون گروه‌بندی</option></select>
+            </label>
+        </div>
+        <div class='right'>
+            <button id='refreshBtn' class='btn primary'>تازه‌سازی</button>
+        </div>
+    </div>
 
-            // Header
-            html += "<div class='grid-header'>";
-            foreach (var col in columnMeta)
-                html += $"<div data-column='{col.Name}'>{col.Header} ▲▼</div>";
-            html += "<div>عملیات</div></div>";
+    <div class='grid-table'>
+        <div class='grid-header'></div>
+        {(EnableFiltering ? "<div class='grid-filters'></div>" : "")}
+        <div class='grid-rows' id='gridRows'></div>
+    </div>
 
-            // Filters
-            if (EnableFiltering)
-            {
-                html += "<div class='grid-filters'>";
-                foreach (var col in columnMeta)
-                    html += $"<input id='filter_{col.Name}' placeholder='جستجو {col.Header}' />";
-                html += "<div></div></div>";
-            }
+    {(EnablePaging ? "<div class='pagination' id='pagination'></div>" : "")}
+</div>
 
-            html += "<div class='grid-rows' id='gridRows'></div>";
-            html += "</div></div>"; // grid-table + wrapper
-
-            if (EnablePaging)
-                html += "<div class='pagination' id='pagination'></div>";
-
-            // JS config (می‌توانید این خط را هم نگه دارید)
-            html += $"<script>var enablePaging={EnablePaging.ToString().ToLower()}; var enableFiltering={EnableFiltering.ToString().ToLower()}; var enableSorting={EnableSorting.ToString().ToLower()}; var enableGrouping={EnableGrouping.ToString().ToLower()};</script>";
+<script>
+window.columnMeta = {columnsJson};
+window.enablePaging = {EnablePaging.ToString().ToLower()};
+window.enableFiltering = {EnableFiltering.ToString().ToLower()};
+window.enableSorting = {EnableSorting.ToString().ToLower()};
+window.enableGrouping = {EnableGrouping.ToString().ToLower()};
+window.fetchUrl = '{FetchUrl}';
+</script>
+<script src='/js/grid-inline-edit.js'></script>
+<link href='/css/grid-inline-edit.css' rel='stylesheet' />
+";
 
             output.Content.SetHtmlContent(html);
         }

@@ -1,10 +1,8 @@
 ﻿document.addEventListener("DOMContentLoaded", () => {
-    const gridTag = document.querySelector("grid-inline-edit");
+    const gridTag = document.querySelector(".dynamic-grid-container");
     if (!gridTag) return;
 
-    // fetchUrl درست گرفته می‌شود
-    const fetchUrl = gridTag.getAttribute("fetch-url") || "";
-
+    const fetchUrl = window.fetchUrl || "";
     let page = 1;
     const pageSize = 20;
     let sortColumn = "";
@@ -12,15 +10,19 @@
     let filters = {};
     let groupBy = "";
 
-    const groupSelect = gridTag.querySelector("#groupBySelector");
+    const groupSelect = document.getElementById("groupBySelector");
+    const columns = window.columnMeta || [];
 
-    function renderGroupOptions(columns) {
+    // پر کردن گزینه‌های گروه‌بندی
+    function renderGroupOptions() {
         groupSelect.innerHTML = '<option value="">بدون گروه‌بندی</option>';
         columns.forEach(col => {
-            const opt = document.createElement("option");
-            opt.value = col.name;
-            opt.textContent = col.header;
-            groupSelect.appendChild(opt);
+            if (col.Visible) {
+                const opt = document.createElement("option");
+                opt.value = col.Name;
+                opt.textContent = col.Header;
+                groupSelect.appendChild(opt);
+            }
         });
     }
 
@@ -40,18 +42,69 @@
         })
             .then(res => res.json())
             .then(result => {
+                renderHeader();
+                if (window.enableFiltering) renderFilters();
                 renderRows(result.data);
-                renderPagination(result.totalPages);
-                if (result.groupColumns) renderGroupOptions(result.groupColumns);
+                if (window.enablePaging) renderPagination(result.totalPages);
+                if (window.enableGrouping && result.groupColumns) renderGroupOptions();
             })
             .catch(err => console.error(err));
     }
 
+    // هدر جدول
+    function renderHeader() {
+        const header = gridTag.querySelector(".grid-header");
+        header.innerHTML = "";
+        columns.forEach(col => {
+            if (!col.Visible) return;
+            const div = document.createElement("div");
+            div.dataset.column = col.Name;
+            div.textContent = `${col.Header} ▲▼`;
+            header.appendChild(div);
+
+            if (window.enableSorting) {
+                div.addEventListener("click", () => {
+                    if (sortColumn === col.Name) sortAsc = !sortAsc;
+                    else { sortColumn = col.Name; sortAsc = true; }
+                    loadData();
+                });
+            }
+        });
+        header.appendChild(document.createElement("div")).textContent = "عملیات";
+    }
+
+    // فیلترها
+    function renderFilters() {
+        const filterRow = gridTag.querySelector(".grid-filters");
+        filterRow.innerHTML = "";
+        columns.forEach(col => {
+            if (!col.Visible) return;
+            const input = document.createElement("input");
+            input.id = `filter_${col.Name}`;
+            input.placeholder = `جستجو ${col.Header}`;
+            input.addEventListener("input", () => {
+                filters[col.Name] = input.value;
+                page = 1;
+                loadData();
+            });
+            filterRow.appendChild(input);
+        });
+        filterRow.appendChild(document.createElement("div"));
+    }
+
+    // ردیف‌ها
     function renderRows(data) {
         const rowsContainer = gridTag.querySelector("#gridRows");
         rowsContainer.innerHTML = "";
 
-        data.forEach(item => {
+        // paging
+        const totalPages = Math.ceil(data.length / pageSize);
+        if (page > totalPages) page = totalPages || 1;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = data.slice(start, end);
+
+        pageData.forEach(item => {
             if (item.__group) {
                 const groupRow = document.createElement("div");
                 groupRow.className = "grid-row group-row";
@@ -60,45 +113,39 @@
             } else {
                 const row = document.createElement("div");
                 row.className = "grid-row";
-                row.dataset.id = item.id;
+                const idCol = columns.find(c => c.Name.toLowerCase() === "id");
+                if (idCol && item[idCol.Name] !== undefined) row.dataset.id = item[idCol.Name];
 
-                let html = "";
-                Object.keys(item).forEach((key, index) => {
-                    if (key !== "id") {
-                        if (key.toLowerCase() === "category") {
-                            html += `<div><select>
-                                        <option>الکترونیک</option>
-                                        <option>پوشاک</option>
-                                        <option>خانه</option>
-                                     </select></div>`;
-                        } else {
-                            html += `<div contenteditable="false">${item[key]}</div>`;
-                        }
-                    } else {
-                        html += `<div>${item[key]}</div>`;
+                columns.forEach(col => {
+                    if (!col.Visible) return;
+                    const cell = document.createElement("div");
+                    cell.dataset.column = col.Name;
+                    if (col.Editable) {
+                        // contentEditable فقط برای ویرایش متنی
+                        cell.contentEditable = "false";
                     }
+                    cell.textContent = item[col.Name] ?? "";
+                    row.appendChild(cell);
                 });
-                html += `<div><button class="btn primary">ویرایش</button></div>`;
-                row.innerHTML = html;
-                rowsContainer.appendChild(row);
 
-                const editBtn = row.querySelector("button");
+                const actionCell = document.createElement("div");
+                const editBtn = document.createElement("button");
+                editBtn.className = "btn primary";
+                editBtn.textContent = "ویرایش";
+                actionCell.appendChild(editBtn);
+                row.appendChild(actionCell);
+
                 editBtn.addEventListener("click", () => {
-                    const cells = row.children;
-                    const idCell = row.dataset.id;
-                    const nameCell = cells[1];
-                    const categoryCell = cells[2].querySelector("select");
-                    const priceCell = cells[3];
-                    const statusCell = cells[4];
-
                     if (row.dataset.editing === "true") {
-                        const payload = {
-                            id: parseInt(idCell),
-                            name: nameCell.textContent,
-                            category: categoryCell.value,
-                            price: priceCell.textContent,
-                            status: statusCell.textContent
-                        };
+                        // ذخیره به سرور
+                        const payload = { Id: row.dataset.id };
+                        columns.forEach(col => {
+                            if (col.Visible && col.Editable) {
+                                const cell = row.querySelector(`div[data-column='${col.Name}']`);
+                                cell.contentEditable = "true";
+                                cell.style.backgroundColor = "white";
+                            }
+                        });
                         fetch(`${fetchUrl}/save`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -107,24 +154,32 @@
 
                         row.dataset.editing = "false";
                         editBtn.textContent = "ویرایش";
-                        [nameCell, priceCell, statusCell, categoryCell].forEach(c => {
+                        row.querySelectorAll("[contenteditable='true']").forEach(c => {
                             c.contentEditable = "false";
                             c.style.backgroundColor = "";
                         });
                     } else {
                         row.dataset.editing = "true";
                         editBtn.textContent = "ذخیره";
-                        [nameCell, priceCell, statusCell].forEach(c => {
-                            c.contentEditable = "true";
-                            c.style.backgroundColor = "white";
+                        columns.forEach(col => {
+                            if (col.Visible && col.Editable) {
+                                const cell = row.querySelector(`div[data-column='${col.Name}']`);
+                                cell.contentEditable = "true";
+                                cell.style.backgroundColor = "white";
+                            }
                         });
-                        categoryCell.style.backgroundColor = "white";
                     }
                 });
+
+                rowsContainer.appendChild(row);
             }
         });
+
+        // صفحه‌بندی
+        if (window.enablePaging) renderPagination(totalPages);
     }
 
+    // صفحه‌بندی
     function renderPagination(totalPages) {
         const container = gridTag.querySelector("#pagination");
         container.innerHTML = "";
@@ -145,28 +200,8 @@
         }
     }
 
-    // Sorting
-    gridTag.querySelectorAll(".grid-header div[data-column]").forEach(div => {
-        div.addEventListener("click", () => {
-            const col = div.dataset.column;
-            if (sortColumn === col) sortAsc = !sortAsc;
-            else { sortColumn = col; sortAsc = true; }
-            loadData();
-        });
-    });
-
-    // Filtering
-    gridTag.querySelectorAll(".grid-filters input").forEach(input => {
-        input.addEventListener("input", () => {
-            const col = input.id.replace("filter_", "");
-            filters[col] = input.value;
-            page = 1;
-            loadData();
-        });
-    });
-
-    // Refresh
-    gridTag.querySelector("#refreshBtn").addEventListener("click", () => {
+    // دکمه تازه‌سازی
+    document.getElementById("refreshBtn").addEventListener("click", () => {
         page = 1;
         filters = {};
         sortColumn = "";
@@ -176,6 +211,6 @@
         loadData();
     });
 
-    // **لود اولیه**
+    // لود اولیه
     loadData();
 });

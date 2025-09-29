@@ -43,7 +43,7 @@
 
 .grid-header, .grid-row, .grid-filters {
     display: grid;
-    grid-template-columns: repeat(5, minmax(120px, 1fr)) 100px; /* 5 ستون + ستون عملیات */
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) 100px; /* ستون‌های داینامیک + ستون عملیات */
     align-items: center;
 }
 
