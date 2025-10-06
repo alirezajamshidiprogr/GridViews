@@ -96,6 +96,49 @@ namespace GridView.Controllers
             var statuses = new[] { "تکمیل شده", "در انتظار", "لغو شده" };
             var salesPersons = new[] { "سارا", "امیر", "رضا", "لیلا" };
 
+            // ده ردیف اول
+            var list = new List<ProductSaleModel>();
+            for (int i = 1; i <= 10; i++) // <--- فقط 10 ردیف
+            {
+                var qty = rnd.Next(1, 20);
+                var price = rnd.Next(100, 5000);
+                list.Add(new ProductSaleModel
+                {
+                    Id = i,
+                    ProductName = products[rnd.Next(products.Length)],
+                    Category = categories[rnd.Next(categories.Length)],
+                    Supplier = suppliers[rnd.Next(suppliers.Length)],
+                    UnitPrice = price,
+                    Quantity = qty,
+                    TotalPrice = price * qty,
+                    Currency = "IRR",
+                    Customer = customers[rnd.Next(customers.Length)],
+                    Region = regions[rnd.Next(regions.Length)],
+                    SaleDate = DateTime.Now.AddDays(-rnd.Next(0, 365)),
+                    PaymentMethod = paymentMethods[rnd.Next(paymentMethods.Length)],
+                    Status = statuses[rnd.Next(statuses.Length)],
+                    Notes = "مثال " + i,
+                    SalesPerson = salesPersons[rnd.Next(salesPersons.Length)]
+                });
+            }
+
+            // داده اولیه ده ردیف به view ارسال می‌شود
+            return View("Index_GridWith_Filter_Sort_Paging_Grouping", list);
+        }
+
+        [HttpPost]
+        public IActionResult GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping([FromBody] GridRequest request)
+        {
+            var rnd = new Random();
+            var products = new[] { "لپ‌تاپ", "موبایل", "مانیتور", "پرینتر", "تبلت", "کیبورد", "موس", "هدفون" };
+            var categories = new[] { "الکترونیک", "لوازم جانبی", "کامپیوتر" };
+            var suppliers = new[] { "شرکت الف", "شرکت ب", "شرکت ج" };
+            var customers = new[] { "علی", "زهرا", "حسین", "مهدی", "سمیه" };
+            var regions = new[] { "تهران", "اصفهان", "مشهد", "شیراز", "تبریز" };
+            var paymentMethods = new[] { "کارت", "نقد", "چک", "آنلاین" };
+            var statuses = new[] { "تکمیل شده", "در انتظار", "لغو شده" };
+            var salesPersons = new[] { "سارا", "امیر", "رضا", "لیلا" };
+
             var list = new List<ProductSaleModel>();
             for (int i = 1; i <= 3000; i++)
             {
@@ -121,8 +164,80 @@ namespace GridView.Controllers
                 });
             }
 
+            // --- فیلتر ---
+            if (request.Filters != null && request.Filters.Any())
+            {
+                foreach (var f in request.Filters)
+                {
+                    if (!string.IsNullOrEmpty(f.Value))
+                    {
+                        // پیدا کردن Property بدون حساسیت به حروف بزرگ/کوچک
+                        var prop = typeof(ProductSaleModel).GetProperties()
+                                    .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
 
-            return View("Index_GridWith_Filter_Sort_Paging_Grouping", list);
+                        if (prop != null)
+                        {
+                            list = list.Where(x =>
+                            {
+                                var val = prop.GetValue(x)?.ToString() ?? "";
+                                return val.Contains(f.Value, StringComparison.OrdinalIgnoreCase);
+                            }).ToList();
+                        }
+                    }
+                }
+            }
+            // --- سورت ---
+            if (!string.IsNullOrEmpty(request.SortColumn))
+            {
+                var prop = typeof(ProductSaleModel).GetProperty(request.SortColumn);
+                if (prop != null)
+                {
+                    list = request.SortAsc
+                        ? list.OrderBy(x => prop.GetValue(x)).ToList()
+                        : list.OrderByDescending(x => prop.GetValue(x)).ToList();
+                }
+            }
+
+            var totalCount = list.Count;
+
+            // --- گروه‌بندی ---
+            if (!string.IsNullOrEmpty(request.GroupBy))
+            {
+                var prop = typeof(ProductSaleModel).GetProperty(request.GroupBy);
+                if (prop != null)
+                {
+                    var grouped = list
+                        .GroupBy(x => prop.GetValue(x))
+                        .Select(g => new
+                        {
+                            Key = g.Key?.ToString(),
+                            Count = g.Count(),
+                            Items = g.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToList()
+                        })
+                        .ToList();
+
+                    return Json(new
+                    {
+                        TotalCount = totalCount,
+                        GroupBy = request.GroupBy,
+                        Groups = grouped
+                    });
+                }
+            }
+
+            // --- پیجینگ ---
+            var page = request.Page <= 0 ? 1 : request.Page;
+            var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+            var data = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // --- خروجی نهایی ---
+            return Json(new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Items = data
+            });
         }
 
         public IActionResult GridInlineEdit()

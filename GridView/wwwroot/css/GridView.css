@@ -1,10 +1,166 @@
-﻿.dynamic-grid-container {
-    font-family: Tahoma,sans-serif;
+﻿/* تعریف فونت‌ها */
+@font-face {
+    font-family: 'YekanBakh';
+    src: url('../fonts/yekanbakh-regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'YekanBakh';
+    src: url('../fonts/yekanbakh-heavy.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'YekanBakh';
+    src: url('../fonts/yekanbakh-light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'yekan';
+    src: url('../fonts/yekan.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'iranian sans';
+    src: url('../fonts/iranian sans.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'vazir-bold';
+    src: url('../fonts/vazir-bold.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'vazir-light';
+    src: url('../fonts/vazir-light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'vazir-medium';
+    src: url('../fonts/vazir-medium.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'yekan bakh regular';
+    src: url('../fonts/yekan bakh regular.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+#gridContainer,
+.grid-header,
+.grid-cell,
+.grid-filters,
+.grid-body {
+    font-family: 'vazir-light', sans-serif;
+    font-size: 13px; /* می‌تونی کم یا زیاد کنی */
+    direction: rtl; /* راست‌چین */
+    text-align: right; /* متن سلول‌ها راست‌چین */
+}
+.grid-cell {
+    padding: 6px 10px; /* فضای کافی بین متن و مرز سلول */
+    white-space: nowrap; /* جلوگیری از شکستن کلمات */
+    overflow: hidden;
+    text-overflow: ellipsis; /* … اگر متن طولانی بود */
+}
+
+/* --- کانتینر اصلی --- */
+.dynamic-grid-container {
+    font-family: 'vazir-light', sans-serif;
     background: #f4f6f9;
     padding: 10px;
     direction: rtl;
 }
 
+/* --- فقط این بخش اسکرول افقی دارد --- */
+#gridContainerWrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+}
+
+/* --- گرید اصلی --- */
+.grid-container {
+    overflow: visible !important; /* خودش اسکرول نخورد */
+    width: max-content;
+    min-width: 100%;
+    display: block;
+}
+.grid-header .grid-cell {
+    border-left: 1px solid #e1e1e1;
+    text-align: center;
+    font-size: 1.2em;
+    align-content: center;
+    text-align: center;
+    cursor: pointer; /* نشانگر pointer روی هدر */
+    transition: background-color 0.3s ease;
+}
+/* --- ساختار اصلی جدول --- */
+.grid-header,
+.grid-filters,
+.grid-row {
+    display: flex;
+    min-width: max-content;
+}
+
+.grid-header {
+    font-weight: bold;
+    background: #3498db;
+    color: #fff;
+    border-left: 1px solid gray ;
+}
+
+    /* --- سلول‌ها --- */
+    .grid-header .grid-cell,
+    .grid-row .grid-cell,
+    .grid-filters .grid-cell {
+        flex: 1;
+        min-width: 120px;
+        padding: 6px 8px;
+        border-bottom: 1px solid #ddd;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        display: flex; /* فعال کردن Flexbox */
+        justify-content: center; /* وسط چین افقی محتوا */
+        align-items: center; /* وسط چین عمودی محتوا */
+        text-align: center;
+    }
+
+/* --- ورودی فیلتر --- */
+.grid-filters .grid-cell {
+    padding: 4px 8px;
+}
+
+.grid-filters input.filter-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    margin: 0 auto; /* وسط چین کردن input */
+    text-align: center; /* متن داخل input وسط‌چین */
+}
+
+/* --- گروه‌بندی --- */
+.group-row {
+    font-weight: bold;
+    background: #f0f0f0;
+    padding: 6px;
+    margin-top: 4px;
+}
+
+/* --- کنترل‌ها --- */
 .controls {
     display: flex;
     gap: 12px;
@@ -25,50 +181,7 @@
         align-items: center;
     }
 
-.grid-container {
-    display: block;
-    margin-top: 10px;
-}
-
-.grid-header, .grid-row {
-    display: flex;
-}
-
-.grid-header {
-    font-weight: bold;
-    background: #3498db;
-    color: #fff;
-}
-
-    .grid-header .grid-cell, .grid-row .grid-cell {
-        flex: 1;
-        padding: 6px 8px;
-        border-bottom: 1px solid #ddd;
-        min-width: 100px;
-        box-sizing: border-box;
-    }
-
-.grid-filters {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 6px;
-}
-
-    .grid-filters input {
-        flex: 1;
-        padding: 4px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        font-size: 13px;
-    }
-
-.group-row {
-    font-weight: bold;
-    background: #f0f0f0;
-    padding: 6px;
-    margin-top: 4px;
-}
-
+/* --- دکمه‌ها --- */
 .btn {
     padding: 4px 8px;
     border-radius: 4px;
@@ -86,9 +199,68 @@
         color: #fff;
     }
 
+/* --- صفحه‌بندی --- */
 .pagination {
-    margin-top: 10px;
     display: flex;
-    gap: 8px;
+    justify-content: center; /* وسط چین کردن کل pagination */
     align-items: center;
+    gap: 12px;
+    margin: 20px 0;
 }
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+    .pagination-btn svg {
+        stroke: currentColor;
+    }
+
+    .pagination-btn:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+    }
+
+/* ردیف‌های گرید */
+.grid-row:nth-child(even) {
+    background-color: #f9f9f9; /* ردیف‌های زوج رنگ روشن */
+}
+
+.grid-row:nth-child(odd) {
+    background-color: #ffffff; /* ردیف‌های فرد سفید */
+}
+
+/* هاور ردیف */
+.grid-row:hover {
+    background-color: #d6eaf8; /* رنگ روشن آبی هنگام هاور */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* اگر بخواهیم سلول‌ها هم کمی انیمیشن داشته باشند */
+.grid-row .grid-cell {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* جلوگیری از اسکرول داخلی در gridContainer */
+/*#gridContainer {
+    overflow: visible !important;
+    width: max-content;*/ /* اجازه بده محتوا عرض خودش رو تعیین کنه */
+    /*min-width: 100%;
+}*/
+
+/* فقط wrapper حق اسکرول داره */
+/*#gridContainerWrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+}*/

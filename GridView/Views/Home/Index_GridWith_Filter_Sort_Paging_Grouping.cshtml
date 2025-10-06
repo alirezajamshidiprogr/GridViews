@@ -2,10 +2,15 @@
 <link href="~/css/gridview.css" rel="stylesheet" />
 @model List<ProductSaleModel>
 
-<dynamic-grid items="@Model.Cast<object>().ToList()"
+@{
+    var gridUrl = Url.Action("GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping", "Home");
+}
+<dynamic-grid url="@gridUrl"
+              Items="@Model.Cast<object>().ToList()"
               enable-paging="true"
               enable-filtering="true"
               enable-sorting="true"
+              enable-footer="true"
               enable-grouping="true">
 </dynamic-grid>
 
@@ -13,6 +18,7 @@
 <script src="~/js/gridview.js"></script>
 
 <script>
+    console.log('Grid URL:', '@gridUrl'); // ببینید خروجی درست است
 
 </script>
 
