@@ -65,6 +65,7 @@
     font-size: 13px; /* می‌تونی کم یا زیاد کنی */
     direction: rtl; /* راست‌چین */
     text-align: right; /* متن سلول‌ها راست‌چین */
+    overflow-y: visible; /* یا حداقل برای منوی filter overflow: visible */
 }
 .grid-cell {
     padding: 6px 10px; /* فضای کافی بین متن و مرز سلول */
@@ -75,6 +76,8 @@
 
 /* --- کانتینر اصلی --- */
 .dynamic-grid-container {
+    display: flex;
+    flex-direction: column;
     font-family: 'vazir-light', sans-serif;
     background: #f4f6f9;
     padding: 10px;
@@ -87,7 +90,37 @@
     overflow-y: hidden;
     width: 100%;
 }
+.grid-cell .btn {
+    font-size: 13px;
+    display: inline-flex; /* مطمئن می‌شویم svg و متن کنار هم هستند */
+    align-items: center;
+    gap: 6px; /* فاصله بین آیکون و متن */
+}
+    .grid-cell .btn{
+        margin-left: 8px; /* فاصله بین دو دکمه */
+    }
 
+
+.grid-footer {
+    display: flex;
+    width: 100%; /* تغییر از max-content به 100% */
+    background: #f8f9fa;
+    font-weight: bold;
+    border-top: 2px solid #ccc;
+}
+
+    .grid-footer .grid-row.footer-row {
+        display: flex;
+        width: 100%; /* همسان با grid-footer */
+    }
+
+    .grid-footer .grid-cell {
+        flex: 1;
+        min-width: 120px; /* همانند grid-row های اصلی */
+        padding: 6px 8px;
+        box-sizing: border-box;
+        text-align: center;
+    }
 /* --- گرید اصلی --- */
 .grid-container {
     overflow: visible !important; /* خودش اسکرول نخورد */
@@ -97,6 +130,7 @@
 }
 .grid-header .grid-cell {
     border-left: 1px solid #e1e1e1;
+    border-bottom:none !important ;
     text-align: center;
     font-size: 1.2em;
     align-content: center;
@@ -149,8 +183,20 @@
     border: 1px solid #ccc;
     font-size: 13px;
     margin: 0 auto; /* وسط چین کردن input */
+    text-align: left; /* متن داخل input وسط‌چین */
+}
+
+.footer-row .grid-cell input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    margin: 0 auto; /* وسط چین کردن input */
     text-align: center; /* متن داخل input وسط‌چین */
 }
+
 
 /* --- گروه‌بندی --- */
 .group-row {
@@ -199,36 +245,75 @@
         color: #fff;
     }
 
-/* --- صفحه‌بندی --- */
+/* فوتر گريد  */
+
 .pagination {
     display: flex;
-    justify-content: center; /* وسط چین کردن کل pagination */
     align-items: center;
-    gap: 12px;
-    margin: 20px 0;
+    justify-content: space-between; /* فاصله بین سه بخش */
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'vazir-light', sans-serif;
+    direction: rtl; /* راست به چپ */
 }
+
+    .pagination .pagination-center {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* فاصله بین متن و سلکت */
+    }
+
+    .pagination label {
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pagination select {
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: none;
+        font-size: 13px;
+        outline: none;
+        cursor: pointer;
+    }
+
 .pagination-btn {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: #3498db;
-    color: #fff;
+    background: #fff;
+    color: #3498db;
     border: none;
     padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    transition: background 0.3s, transform 0.2s;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s, color 0.3s;
 }
 
-    .pagination-btn svg {
-        stroke: currentColor;
-    }
-
     .pagination-btn:hover {
-        background: #2980b9;
+        background: #f0f0f0;
+        color: #2980b9;
         transform: translateY(-1px);
     }
+
+#pageInfo {
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    min-width: 80px;
+}
+
+
+
+
+
 
 /* ردیف‌های گرید */
 .grid-row:nth-child(even) {
@@ -259,8 +344,127 @@
 }*/
 
 /* فقط wrapper حق اسکرول داره */
-/*#gridContainerWrapper {
+#gridContainerWrapper {
     overflow-x: auto;
-    overflow-y: hidden;
+ /*   overflow-y: hidden;
+    width: 100%;*/
+}
+
+.grid-header, .grid-filters {
+    display: flex;
+    min-width: max-content;
+    position: sticky;
+    top: 0; /* بالای کانتینر */
+    z-index: 2;
+    color: #fff;
+}
+
+
+.grid-body {
+    display: block;
+    max-height: 400px; /* ارتفاع موردنظر */
+    overflow-y: auto;
+}
+
+.grid-row {
+    display: flex;
+    min-width: max-content;
+}
+
+.grid-cell {
+    position: relative; /* والد برای منوی مطلق */
+}
+
+.filter-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    z-index: 2;
+    color: #3498db;
+    font-size: 17px;
+}
+
+.filter-menu {
+    top: calc(100% + 2px);
+    display: none;
+    position: absolute; /* بسیار مهم */
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 60px;
+    z-index: 1000; /* روی همه چیز نمایش داده شود */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 158px;
+    text-align: center;
+    font-family: 'vazir-light', sans-serif;
+    font-size: 13px !important;
+}
+
+    .filter-menu li {
+        padding: 4px 8px;
+        cursor: pointer;
+    }
+
+        .filter-menu li:hover {
+            background: #eee;
+        }
+
+.grid-cell[data-footer] {
+    /*background-color: #3498db;*/ /* رنگ پس‌زمینه */
+    color: black; /* رنگ متن */
+    font-weight: bold; /* پررنگ */
+    font-size: 1.1em; /* کمی بزرگتر از متن معمولی */
+    border: 1px solid #ffffff50; /* حاشیه ملایم */
+    padding: 6px 10px; /* فاصله داخلی */
+    text-align: right;
+}
+
+
+.footer-input {
     width: 100%;
-}*/
+    box-sizing: border-box;
+    padding: 4px 24px 4px 8px;
+    font-size: 0.9em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.footer-icon {
+    position: absolute;
+    right: 11%;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    z-index: 2;
+    color: #3498db;
+    font-size: 17px;
+}
+
+.footer-menu {
+    background: white;
+    border: 1px solid #ccc;
+    list-style: none;
+    width: 60px;
+    z-index: 1000; /* روی همه چیز نمایش داده شود */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 158px;
+    text-align: center;
+    font-family: 'vazir-light', sans-serif;
+    font-size: 13px !important;
+}
+
+    .footer-menu li {
+        padding: 6px 8px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+
+        .footer-menu li:hover {
+            background-color: #f0f0f0;
+        }
+

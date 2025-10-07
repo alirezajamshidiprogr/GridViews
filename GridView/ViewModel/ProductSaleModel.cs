@@ -23,7 +23,7 @@
         [GridColumn("منطقه")]
         public string Region { get; set; }
         [GridColumn("تاريخ فروش")]
-        public DateTime SaleDate { get; set; }
+        public string SaleDate { get; set; }
         [GridColumn("نوع پرداخت")]
         public string PaymentMethod { get; set; }
         [GridColumn("وضعيت")]

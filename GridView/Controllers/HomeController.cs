@@ -2,6 +2,7 @@
 using GridView.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -95,10 +96,8 @@ namespace GridView.Controllers
             var paymentMethods = new[] { "کارت", "نقد", "چک", "آنلاین" };
             var statuses = new[] { "تکمیل شده", "در انتظار", "لغو شده" };
             var salesPersons = new[] { "سارا", "امیر", "رضا", "لیلا" };
-
-            // ده ردیف اول
             var list = new List<ProductSaleModel>();
-            for (int i = 1; i <= 10; i++) // <--- فقط 10 ردیف
+            for (int i = 1; i <= 10; i++)
             {
                 var qty = rnd.Next(1, 20);
                 var price = rnd.Next(100, 5000);
@@ -114,20 +113,50 @@ namespace GridView.Controllers
                     Currency = "IRR",
                     Customer = customers[rnd.Next(customers.Length)],
                     Region = regions[rnd.Next(regions.Length)],
-                    SaleDate = DateTime.Now.AddDays(-rnd.Next(0, 365)),
+                    SaleDate = DateTime.Now.AddDays(-rnd.Next(0, 365)).ToShortDateString(),
                     PaymentMethod = paymentMethods[rnd.Next(paymentMethods.Length)],
                     Status = statuses[rnd.Next(statuses.Length)],
                     Notes = "مثال " + i,
                     SalesPerson = salesPersons[rnd.Next(salesPersons.Length)]
                 });
             }
+            //Random random = new Random();
 
-            // داده اولیه ده ردیف به view ارسال می‌شود
+            //var firstNames = new[] { "علی", "زهرا", "حسین", "سمیه", "رضا", "لیلا", "مهدی", "سارا", "امیر", "فاطمه" };
+            //var lastNames = new[] { "محمدی", "رضایی", "کریمی", "حسینی", " احمدی", "فراهانی", "نجفی", "سعیدی", "عباسی", "صادقی" };
+            //var genders = new[] { "مرد", "زن" };
+            //var cities = new[] { "تهران", "مشهد", "شیراز", "اصفهان", "تبریز", "کرج", "قم", "کرمان", "اراک", "اهواز" };
+
+
+            //var list = new List<PersonModel>();
+            //for (int i = 1; i <= 10; i++)
+            //{
+            //    var person = new PersonModel
+            //    {
+            //        Id = i,
+            //        FirstName = firstNames[random.Next(firstNames.Length)],
+            //        LastName = lastNames[random.Next(lastNames.Length)],
+            //        Age = random.Next(18, 70),
+            //        Gender = genders[random.Next(genders.Length)],
+            //        Email = $"user{i}@example.com",
+            //        Phone = $"09{random.Next(10000000, 99999999)}",
+            //        City = cities[random.Next(cities.Length)]
+            //    };
+            //    list.Add(person);
+            //}
+
+
             return View("Index_GridWith_Filter_Sort_Paging_Grouping", list);
         }
 
         [HttpPost]
         public IActionResult GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping([FromBody] GridRequest request)
+        {
+            //return GetGridData_PersonModel(request);
+            return GetGridData_ProductSaleModel(request);
+        }
+
+        private JsonResult GetGridData_ProductSaleModel(GridRequest request)
         {
             var rnd = new Random();
             var products = new[] { "لپ‌تاپ", "موبایل", "مانیتور", "پرینتر", "تبلت", "کیبورد", "موس", "هدفون" };
@@ -156,7 +185,7 @@ namespace GridView.Controllers
                     Currency = "IRR",
                     Customer = customers[rnd.Next(customers.Length)],
                     Region = regions[rnd.Next(regions.Length)],
-                    SaleDate = DateTime.Now.AddDays(-rnd.Next(0, 365)),
+                    SaleDate = (DateTime.Now.AddDays(-rnd.Next(0, 365))).ToShortDateString(),
                     PaymentMethod = paymentMethods[rnd.Next(paymentMethods.Length)],
                     Status = statuses[rnd.Next(statuses.Length)],
                     Notes = "مثال " + i,
@@ -224,12 +253,137 @@ namespace GridView.Controllers
                     });
                 }
             }
+            int page =0 ;
+            int pageSize= 0;
+            List<ProductSaleModel> data;
 
             // --- پیجینگ ---
-            var page = request.Page <= 0 ? 1 : request.Page;
-            var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-            var data = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            if (request.enablePaging)
+            {
+                page = request.Page <= 0 ? 1 : request.Page;
+                pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+                data = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            }
+            else
+            {
+                page= 1;
+                pageSize = list.Count();
+                data = list;
+            }
+            // --- خروجی نهایی ---
+            return Json(new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Items = data
+            });
+        }
 
+        private JsonResult GetGridData_PersonModel(GridRequest request)
+        {
+            Random random = new Random();
+
+            var firstNames = new[] { "علی", "زهرا", "حسین", "سمیه", "رضا", "لیلا", "مهدی", "سارا", "امیر", "فاطمه" };
+            var lastNames = new[] { "محمدی", "رضایی", "کریمی", "حسینی", " احمدی", "فراهانی", "نجفی", "سعیدی", "عباسی", "صادقی" };
+            var genders = new[] { "مرد", "زن" };
+            var cities = new[] { "تهران", "مشهد", "شیراز", "اصفهان", "تبریز", "کرج", "قم", "کرمان", "اراک", "اهواز" };
+
+
+            var list = new List<PersonModel>();
+            for (int i = 1; i <= 1000; i++)
+            {
+                var person = new PersonModel
+                {
+                    Id = i,
+                    FirstName = firstNames[random.Next(firstNames.Length)],
+                    LastName = lastNames[random.Next(lastNames.Length)],
+                    Age = random.Next(18, 70),
+                    Gender = genders[random.Next(genders.Length)],
+                    Email = $"user{i}@example.com",
+                    Phone = $"09{random.Next(10000000, 99999999)}",
+                    City = cities[random.Next(cities.Length)]
+                };
+                list.Add(person);
+            }
+
+            // --- فیلتر ---
+            if (request.Filters != null && request.Filters.Any())
+            {
+                foreach (var f in request.Filters)
+                {
+                    if (!string.IsNullOrEmpty(f.Value))
+                    {
+                        // پیدا کردن Property بدون حساسیت به حروف بزرگ/کوچک
+                        var prop = typeof(PersonModel).GetProperties()
+                                    .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+
+                        if (prop != null)
+                        {
+                            list = list.Where(x =>
+                            {
+                                var val = prop.GetValue(x)?.ToString() ?? "";
+                                return val.Contains(f.Value, StringComparison.OrdinalIgnoreCase);
+                            }).ToList();
+                        }
+                    }
+                }
+            }
+            // --- سورت ---
+            if (!string.IsNullOrEmpty(request.SortColumn))
+            {
+                var prop = typeof(PersonModel).GetProperty(request.SortColumn);
+                if (prop != null)
+                {
+                    list = request.SortAsc
+                        ? list.OrderBy(x => prop.GetValue(x)).ToList()
+                        : list.OrderByDescending(x => prop.GetValue(x)).ToList();
+                }
+            }
+
+            var totalCount = list.Count;
+
+            // --- گروه‌بندی ---
+            if (!string.IsNullOrEmpty(request.GroupBy))
+            {
+                var prop = typeof(PersonModel).GetProperty(request.GroupBy);
+                if (prop != null)
+                {
+                    var grouped = list
+                        .GroupBy(x => prop.GetValue(x))
+                        .Select(g => new
+                        {
+                            Key = g.Key?.ToString(),
+                            Count = g.Count(),
+                            Items = g.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToList()
+                        })
+                        .ToList();
+
+                    return Json(new
+                    {
+                        TotalCount = totalCount,
+                        GroupBy = request.GroupBy,
+                        Groups = grouped
+                    });
+                }
+            }
+            int page =0 ;
+            int pageSize= 0;
+            List<PersonModel> data;
+
+            // --- پیجینگ ---
+            if (request.enablePaging)
+            {
+                page = request.Page <= 0 ? 1 : request.Page;
+                pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+                data = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            }
+            else
+            {
+                page= 1;
+                pageSize = list.Count();
+                data = list;
+            }
             // --- خروجی نهایی ---
             return Json(new
             {
@@ -290,7 +444,8 @@ namespace GridView.Controllers
             {
                 dataList = query
                  .AsEnumerable() // بعد از این خط داده‌ها در حافظه هستند
-                 .GroupBy(x => {
+                 .GroupBy(x =>
+                 {
                      var prop = x.GetType().GetProperty(request.GroupBy);
                      return prop != null ? prop.GetValue(x) : null;
                  })
@@ -368,7 +523,7 @@ namespace GridView.Controllers
                     Currency = Currencies[rand.Next(Currencies.Length)],
                     Customer = Customers[rand.Next(Customers.Length)],
                     Region = Regions[rand.Next(Regions.Length)],
-                    SaleDate = DateTime.Now.AddDays(-rand.Next(0, 365)),
+                    SaleDate = DateTime.Now.AddDays(-rand.Next(0, 365)).ToShortDateString(),
                     PaymentMethod = PaymentMethods[rand.Next(PaymentMethods.Length)],
                     Status = Statuses[rand.Next(Statuses.Length)],
                     Notes = NotesList[rand.Next(NotesList.Length)],

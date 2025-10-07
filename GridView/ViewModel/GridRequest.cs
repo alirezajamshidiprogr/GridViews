@@ -8,5 +8,6 @@
         public bool SortAsc { get; set; }
         public Dictionary<string, string> Filters { get; set; }
         public string GroupBy { get; set; }
+        public bool enablePaging { get; set; }
     }
 }
