@@ -1,64 +1,121 @@
-﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+﻿using Microsoft.AspNetCore.Html;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 
-namespace YourProject.TagHelpers
+namespace GridView.TagHelpers
 {
-    [HtmlTargetElement("dynamic-grid")]
-    public class DynamicGridWithFilter_Sort_Grouping_Paging_TagHelper : TagHelper
+    public class DynamicGridBuilder
     {
-        public List<object> Items { get; set; } = new List<object>();
-        public bool EnablePaging { get; set; } = true;
-        public bool EnableFiltering { get; set; } = true;
-        public bool EnableSorting { get; set; } = true;
-        public bool EnableFooter { get; set; } = false;
-        public bool EnableGrouping { get; set; } = true;
-        [HtmlAttributeName("url")]
-        public string DataUrl { get; set; }
+        private List<object> _items = new List<object>();
+        private string _gridName;
+        private string _url;
+        private bool _enablePaging = true;
+        private bool _enableFiltering = true;
+        private bool _enableSorting = true;
+        private bool _enableFooter = false;
+        private bool _enableGrouping = true;
+        private bool _enableExcelExport = true;
+        private bool _enablePrint = true;
+        private bool _enableShowHiddenColumns = true;
 
-        public override void Process(TagHelperContext context, TagHelperOutput output)
+        public DynamicGridBuilder Items(List<object> items) { _items = items; return this; }
+        public DynamicGridBuilder GridName(string name) { _gridName = name; return this; }
+        public DynamicGridBuilder Url(string url) { _url = url; return this; }
+        public DynamicGridBuilder EnablePaging(bool val) { _enablePaging = val; return this; }
+        public DynamicGridBuilder EnableFiltering(bool val) { _enableFiltering = val; return this; }
+        public DynamicGridBuilder EnableSorting(bool val) { _enableSorting = val; return this; }
+        public DynamicGridBuilder EnableFooter(bool val) { _enableFooter = val; return this; }
+        public DynamicGridBuilder EnableGrouping(bool val) { _enableGrouping = _enablePaging ? false : val; return this; }
+        public DynamicGridBuilder EnableExcelExport(bool val) { _enableExcelExport = val; return this; }
+        public DynamicGridBuilder EnablePrint(bool val) { _enablePrint = val; return this; }
+        public DynamicGridBuilder EnableShowHiddenColumns(bool val) { _enableShowHiddenColumns = val; return this; }
+
+        public IHtmlContent Build()
         {
-            output.TagName = "div";
-            output.Attributes.SetAttribute("class", "dynamic-grid-container");
-
-            var html = "<h3>گرید داینامیک</h3>";
-            html += $"<div id='gridData' data-url='{DataUrl ?? ""}' style='display:none;'></div>";
-            html += $"<div id='gridSettings' data-enable-paging='{EnablePaging.ToString().ToLower()}'></div>";
-            
-
-            // Wrapper کلی
-            html += "<div id='gridContainerWrapper'>";
-
-            // Controls گروه‌بندی
-            if (EnableGrouping)
+            string html = "";
+            if (string.IsNullOrEmpty(_url))
             {
-                html += "<div class='controls'>";
-                html += $"<div id='grd-pageSizeSelector'>" +
-                $"<label>تعداد در هر صفحه:" +
-                $"<select id='pageSizeSelector'>" +
-                $"<option value='5'>5</option>" +
-                $"<option value='10' selected>10</option>" +
-                $"<option value='20'>20</option>" +
-                $"</select>" +
-                $"</label></div>";
-                html += "<div class='left'><label>گروه‌بندی بر اساس:";
-                html += "<select id='groupBySelector'><option value=''>— بدون گروه‌بندی —</option></select>";
-                html += "</label></div>";
-                html += "</div>";
+                return new HtmlString("براي گريد آدرس دهي اوليه نشده است !");
+            }
+            if (string.IsNullOrEmpty(_gridName))
+            {
+                return new HtmlString("نامي براي گريد خود انتخاب كنيد");
             }
 
-            // div اصلی gridContainer که JS روی آن کار می‌کند
+            html = $"<div id='{_gridName}' class='dynamic-grid-container'>";
+
+            html += $"<div id='gridData' data-url='{_url ?? ""}' style='display:none;'></div>";
+
+            html += $"<div id='gridSettings' data-enable-paging='{_enablePaging.ToString().ToLower()}'></div>";
+
+            html += "<div id='gridContainerWrapper'>";
+            html += "<div class='row controls controls-bar'>";
+            if (_enablePaging)
+            {
+                html += $"<div class='col-2' id='grd-pageSizeSelector'>" +
+                   $"<label>تعداد در هر صفحه:" +
+                   $"<select id='pageSizeSelector'>" +
+                   $"<option value='5'>5</option>" +
+                   $"<option value='10'>10</option>" +
+                   $"<option value='15'>15</option>" +
+                   $"<option value='20'>20</option>" +
+                   $"<option value='25'>25</option>" +
+                   $"<option value='30' selected>30</option>" +
+                   $"</select>" +
+                   $"</label></div>";
+            }
+
+
+            if (_enableGrouping)
+            {
+                // استخراج ستون‌های قابل گروه‌بندی
+                var groupableColumns = _items.First()
+                    .GetType()
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Select(p => new
+                    {
+                        Prop = p,
+                        Attr = p.GetCustomAttribute<GridColumnAttribute>()
+                    })
+                    .Where(x => x.Attr != null && (x.Attr.EnableGrouping == true)) // فقط اونایی که grouping=true دارن
+                    .ToList();
+
+                html += "<div class='col-2 groupby-wrapper'><label>گروه‌بندی بر اساس:";
+                html += "<select id='groupBySelector'>";
+                html += "<option value=''>— بدون گروه‌بندی —</option>";
+
+                foreach (var col in groupableColumns)
+                {
+                    var header = col.Attr.Header ?? col.Prop.Name;
+                    html += $"<option value='{col.Prop.Name}'>{header}</option>";
+                }
+
+                html += "</select></label></div>";
+            }
+
+            if (_enableExcelExport)
+            {
+                html += "<div class='col-1' style='max-width:400px;'><button id='ExcelGridBtn' onclick='exportGridToExcelXlsx()' class='btn btn-primary full-width-btn'> خروجي اكسل<i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-excel-o'></i> </button></div>";
+            }
+            if (_enablePrint)
+            {
+                html += "<div class='col-1' style='max-width:400px;'> <button id='printGridBtn' onclick='printDynamicGrid()' class='btn btn-primary full-width-btn'>پرینت  <i style='margin-right: 6px;font-size: 20px;' class='fa fa-print'></i></button></div>";
+            } 
+            if (_enableShowHiddenColumns)
+            {
+                html += "<div class='col-1' style='max-width:400px;'> <button id='displayGridColumns' onclick='displayGridColumns()' class='btn btn-primary full-width-btn'>نمايش ستون<i style='margin-right: 6px;font-size: 20px;' class='fa fa-columns'></i></button></div>";
+            }
+
+            html += "</div>"; // controls
+
             html += "<div id='gridContainer' class='grid-container'>";
 
-            //if (Items == null || !Items.Any())
-            //{
-            //    //html += "<div>هیچ داده‌ای وجود ندارد.</div>";
-            //}
-            //else
-            //{
-                var firstItem = Items.First();
+            if (_items.Any())
+            {
+                var firstItem = _items.First();
                 var props = firstItem.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 var columnsMeta = props
                     .Select(p => new { Prop = p, Attr = p.GetCustomAttribute<GridColumnAttribute>() })
@@ -70,14 +127,14 @@ namespace YourProject.TagHelpers
                 foreach (var col in columnsMeta)
                 {
                     var style = col.Attr.Visible ? "" : "style='display:none;'";
-                    var sortIcons = EnableSorting && col.Attr.EnableSorting ? " ▲▼" : "";
+                    var sortIcons = _enableSorting && col.Attr.EnableSorting ? " ▲▼" : "";
                     html += $"<div class='grid-cell' {style} data-column='{col.Prop.Name}'>{col.Attr.Header}{sortIcons}</div>";
                 }
                 html += "<div class='grid-cell'>عملیات</div>";
-                html += "</div>"; // پایان grid-header
+                html += "</div>";
 
-                // Filters زیر Header
-                if (EnableFiltering)
+                // Filters
+                if (_enableFiltering)
                 {
                     html += "<div class='grid-filters'>";
                     foreach (var col in columnsMeta)
@@ -98,13 +155,13 @@ namespace YourProject.TagHelpers
                                 $"</ul>" +
                                 "</div>";
                     }
-                    html += "<div class='grid-cell'></div>"; // ستون عملیات خالی
-                    html += "</div>"; // پایان grid-filters
+                    html += "<div class='grid-cell'></div>";
+                    html += "</div>";
                 }
 
                 // Body
                 html += "<div class='grid-body'>";
-                foreach (var item in Items)
+                foreach (var item in _items)
                 {
                     html += "<div class='grid-row'>";
                     foreach (var col in columnsMeta)
@@ -113,76 +170,46 @@ namespace YourProject.TagHelpers
                         var style = col.Attr.Visible ? "" : "style='display:none;'";
                         html += $"<div class='grid-cell' data-cell={col.Prop.Name} {style}>{value}</div>";
                     }
-                    html += "<div class='grid-cell'><button class='btn primary edit-btn'>ویرایش ...</button>" +
-                            "<button class='btn danger delete-btn'>حذف ...</button></div>";
-                    html += "</div>"; // پایان grid-row
+                    html += "<div class='grid-cell'><button class='btn primary edit-btn'>ویرایش</button>" +
+                            "<button class='btn danger delete-btn'>حذف</button></div>";
+                    html += "</div>";
                 }
-                html += "</div>"; // پایان grid-body
+                html += "</div>";
 
-            // Footer (دقیقاً بعد از grid-body)
-            if (EnableFooter)
-            {
-                html += "<div class='grid-footer'>";
-                html += "<div class='grid-row footer-row'>";
-
-                foreach (var col in columnsMeta)
+                // Footer
+                if (_enableFooter)
                 {
-                    var style = col.Attr.Visible ? "" : "style='display:none;'";
-                    bool isNumeric = false;
-                    var propType = col.Prop.PropertyType;
+                    html += "<div class='grid-footer'><div class='grid-row footer-row'>";
+                    foreach (var col in columnsMeta)
+                    {
+                        var style = col.Attr.Visible ? "" : "style='display:none;'";
+                        bool isNumeric = col.Prop.PropertyType == typeof(int) || col.Prop.PropertyType == typeof(double) ||
+                                         col.Prop.PropertyType == typeof(decimal) || col.Prop.PropertyType == typeof(float) ||
+                                         col.Prop.PropertyType == typeof(long);
 
-                    if (propType == typeof(int) || propType == typeof(double) ||
-                        propType == typeof(decimal) || propType == typeof(float) ||
-                        propType == typeof(long))
-                    {
-                        isNumeric = true;
-                    }
-                    else if (propType == typeof(string))
-                    {
-                        // فقط اگر همه مقادیر ستون کاملاً عدد باشند و شامل / یا حروف نشوند
-                        isNumeric = Items.All(item =>
+                        string footerValue = "";
+                        if (isNumeric)
                         {
-                            var value = col.Prop.GetValue(item)?.ToString();
-                            return !string.IsNullOrEmpty(value) &&
-                                   value.All(c => char.IsDigit(c)); // فقط ارقام
-                        });
-                    }
+                            var sum = _items.Sum(item => Convert.ToDecimal(col.Prop.GetValue(item) ?? 0));
+                            footerValue = sum.ToString("N0");
+                        }
 
-                    string footerValue = "";
-                    if (isNumeric)
-                    {
-                        var sum = Items.Sum(item =>
-                        {
-                            var value = col.Prop.GetValue(item)?.ToString();
-                            return decimal.TryParse(value, out var num) ? num : 0;
-                        });
-                        footerValue = sum.ToString("N0");
+                        html += $"<div class='grid-cell disabled' data-footer={col.Prop.Name} {style}>" +
+                                $"<input type='text' class='footer-input' placeholder='نوع عمليات' value='{footerValue}' readonly />" +
+                                (isNumeric ?
+                                    "<span class='footer-icon' data-icon-id='calc'>Σ</span>" +
+                                    "<ul class='footer-menu' style='display: none;'>" +
+                                    " <li data-calc='sum'>➕ جمع</li>" +
+                                    " <li data-calc='avg'>📊 میانگین</li>" +
+                                    " <li data-calc='count'>🔢 تعداد</li>" +
+                                    " <li data-calc='max'>⬆️ بیشترین</li>" +
+                                    " <li data-calc='min'>⬇️ کمترین</li>" +
+                                    "</ul>" : "") +
+                                "</div>";
                     }
-
-                    html += $"<div class='grid-cell disabled' data-footer={col.Prop.Name} {style}>" +
-                            $"<input type='text' class='footer-input' placeholder='نوع عمليات' value='{footerValue}' readonly />" +
-                            (isNumeric ?
-                                "<span class='footer-icon' data-icon-id='calc'>Σ</span>" +
-                                "<ul class='footer-menu' style='display: none;'>" +
-                                " <li data-calc='sum'>➕ جمع</li>" +
-                                " <li data-calc='avg'>📊 میانگین</li>" +
-                                " <li data-calc='count'>🔢 تعداد</li>" +
-                                " <li data-calc='max'>⬆️ بیشترین</li>" +
-                                " <li data-calc='min'>⬇️ کمترین</li>" +
-                                "</ul>"
-                                : ""
-                            ) +
-                            "</div>";
+                    html += "<div class='grid-cell'></div></div></div>";
                 }
 
-                html += "<div class='grid-cell'></div>";
-                html += "</div>";
-                html += "</div>";
-            }
-
-            html += "</div>"; // پایان grid-body
-
-                // JSON برای JS
                 var columnsJson = props.Select(p =>
                 {
                     var attr = p.GetCustomAttribute<GridColumnAttribute>();
@@ -196,36 +223,38 @@ namespace YourProject.TagHelpers
                         grouping = attr?.EnableGrouping ?? true
                     };
                 }).ToList();
+
                 var jsonData = JsonSerializer.Serialize(new
                 {
-                    items = Items.Select(i => i.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                         .ToDictionary(p => p.Name, p => p.GetValue(i))),
+                    items = _items.Select(i => i.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                     .ToDictionary(p => p.Name, p => p.GetValue(i))),
                     columns = columnsJson
                 });
+
                 html += $"<script id='gridDataLocal' type='application/json'>{jsonData}</script>";
-            //}
+            }
 
             html += "</div>"; // پایان gridContainer
-
             html += "</div>"; // پایان gridContainerWrapper
 
             // Paging
-            if (EnablePaging)
+            if (_enablePaging)
             {
                 html += @"<div class='pagination'>
                     <button id='prevPage' class='btn pagination-btn'>قبلی<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke=' currentColor' stroke-width='2'><polyline points='9 6 15 12 9 18'></polyline></svg></button>
                     <span id='pageInfo'></span>
-                    <button id='nextPage' class='btn pagination-btn'>بعدی <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='15 18 9 12 15 6'></polyline></svg></svg></button>
+                    <button id='nextPage' class='btn pagination-btn'>بعدی<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='15 18 9 12 15 6'></polyline></svg></svg></button>
                 </div>";
-
-
             }
 
+            html += "</div>"; // پایان dynamic-grid-container
 
-
-        
-
-            output.Content.SetHtmlContent(html);
+            return new HtmlString(html);
         }
+    }
+
+    public static class DynamicGridExtensions
+    {
+        public static DynamicGridBuilder Jamshidi_Grid() => new DynamicGridBuilder();
     }
 }

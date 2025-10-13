@@ -168,22 +168,34 @@
         justify-content: center; /* وسط چین افقی محتوا */
         align-items: center; /* وسط چین عمودی محتوا */
         text-align: center;
+
     }
 
 /* --- ورودی فیلتر --- */
 .grid-filters .grid-cell {
+    flex: 1; /* اجازه می‌دهد سلول با header هماهنگ شود */
+    min-width: 120px; /* همانند header */
     padding: 4px 8px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* وسط چین افقی محتوا */
+    align-items: center; /* وسط چین عمودی محتوا */
+    position: relative; /* برای آیکون و منو */
+    transition: width 0.3s ease; /* برای تغییر width هنگام hide/show */
 }
 
 .grid-filters input.filter-input {
-    width: 100%;
+    width: 100%; /* پر کردن تمام سلول */
     box-sizing: border-box;
     padding: 4px 6px;
     border-radius: 4px;
     border: 1px solid #ccc;
     font-size: 13px;
-    margin: 0 auto; /* وسط چین کردن input */
-    text-align: left; /* متن داخل input وسط‌چین */
+    text-align: left;
+}
+/* وقتی ستون مخفی است، سلول مربوطه در filter هم مخفی شود */
+.grid-filters .grid-cell[data-column="Id"] {
+    display: none; /* مثال برای ستون Id */
 }
 
 .footer-row .grid-cell input {
@@ -250,13 +262,15 @@
 .pagination {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* فاصله بین سه بخش */
-    padding: 10px 20px;
-    background: linear-gradient(90deg, #3498db, #2980b9);
-    border-radius: 8px;
-    color: #fff;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #f0f4f8; /* ملایم و روشن */
+    border-radius: 12px; /* گوشه‌های نرم‌تر */
+    color: #3498db; /* رنگ متن جذاب ولی ملایم */
     font-family: 'vazir-light', sans-serif;
-    direction: rtl; /* راست به چپ */
+    direction: rtl;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* سایه خیلی ملایم */
+    transition: background 0.3s ease;
 }
 
     .pagination .pagination-center {
@@ -273,41 +287,48 @@
     }
 
     .pagination select {
-        padding: 4px 6px;
-        border-radius: 4px;
-        border: none;
-        font-size: 13px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
         outline: none;
+        font-size: 13px;
         cursor: pointer;
+        background: #fff;
+        color: #3498db;
     }
+
+        .pagination select:hover {
+            background: #f0f4f8;
+        }
 
 .pagination-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: #fff;
-    color: #3498db;
+    justify-content: center;
+    gap: 6px;
+    background: #3498db; /* رنگ ملایم دکمه */
+    color: #fff;
     border: none;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
-    font-weight: bold;
-    transition: background 0.3s, transform 0.2s, color 0.3s;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
     .pagination-btn:hover {
-        background: #f0f0f0;
-        color: #2980b9;
+        background: #2980b9;
         transform: translateY(-1px);
     }
 
 #pageInfo {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: bold;
-    text-align: center;
-    color: #fff;
-    min-width: 80px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(52, 152, 219, 0.1); /* ملایم */
+    color: #2980b9;
 }
 
 
@@ -359,10 +380,21 @@
     color: #fff;
 }
 
+.grid-filters {
+    display: flex;
+    min-width: max-content;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f4f6f9; /* یا رنگ دلخواه */
+    color: #000; /* رنگ متن */
+    font-size: 13px;
+}
+
 
 .grid-body {
     display: block;
-    max-height: 400px; /* ارتفاع موردنظر */
+    max-height: 700px; /* ارتفاع موردنظر */
     overflow-y: auto;
 }
 
@@ -468,3 +500,299 @@
             background-color: #f0f0f0;
         }
 
+select,
+select option {
+    font-family: 'vazir-light', sans-serif;
+    font-size: 13px;
+    direction: rtl;
+}
+
+/* هدر گروه */
+.grid-group-header {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0; /* رنگ پس‌زمینه هدر */
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ccc;
+    cursor: default; /* خود هدر کلیک نمی‌خورد مگر روی toggle */
+    user-select: none;
+}
+
+    /* span toggle */
+    .grid-group-header span:first-child {
+        cursor: pointer;
+        margin-right: 8px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    /* span عنوان + جمع */
+    .grid-group-header span:last-child {
+        flex: 1; /* باقی فضا را بگیرد */
+    }
+
+    /* حالت hover روی toggle */
+    .grid-group-header span:first-child:hover {
+        color: #0056b3;
+    }
+
+
+/* وقتی گروه بسته می‌شود، ردیف‌ها مخفی */
+.grid-row.collapsed {
+    display: none;
+}
+
+
+
+
+ /*پرينت استايل */
+/* پاپ‌آپ اصلی */
+#columnSelectorPopup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border: 2px solid #4a90e2; /* بردر خوشگل آبی ملایم */
+    padding: 25px 30px;
+    direction: rtl;
+    z-index: 99999;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.25); /* سایه زیبا */
+    border-radius: 16px; /* گرد شدن گوشه‌ها */
+    font-family: 'vazir-light', sans-serif;
+    width: 350px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    /* افکت باز شدن */
+    #columnSelectorPopup.show {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    /* عنوان پاپ‌آپ */
+    #columnSelectorPopup h3 {
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: #333;
+        text-align: center;
+    }
+
+    /* لیبل‌های چک‌باکس */
+    #columnSelectorPopup label {
+        display: block;
+        font-size: 14px;
+        cursor: pointer;
+        margin-bottom: 8px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: background 0.2s ease;
+    }
+
+        #columnSelectorPopup label:hover {
+            background: #f0f8ff; /* افکت هاور روشن روی لیبل‌ها */
+        }
+
+    /* چک‌باکس */
+    #columnSelectorPopup input[type="checkbox"] {
+        margin-left: 8px;
+        transform: scale(1.1);
+    }
+
+    /* کانتینر دکمه‌ها */
+    #columnSelectorPopup .button-container {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    /* دکمه‌ها */
+    #columnSelectorPopup button {
+        padding: 10px 22px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    #columnSelectorPopup #confirmPrint {
+        background-color: #4a90e2;
+        color: white;
+    }
+
+        #columnSelectorPopup #confirmPrint:hover {
+            background-color: #357ABD;
+            transform: translateY(-1px);
+        }
+
+    #columnSelectorPopup #cancelPrint {
+        background-color: #ccc;
+        color: #333;
+    }
+
+        #columnSelectorPopup #cancelPrint:hover {
+            background-color: #aaa;
+            transform: translateY(-1px);
+        }
+
+    /* اسکرول داخلی */
+    #columnSelectorPopup::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #columnSelectorPopup::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 3px;
+    }
+
+
+
+#rowDetailsPopup div span:first-child {
+    min-width: 120px;
+}
+
+
+
+/*جزييات گريد ويو*/
+/* ======= Row Detail Popup ======= */
+#rowDetailPopup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    padding: 30px 35px;
+    width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+    direction: rtl;
+    z-index: 999999;
+    font-family: 'vazir-light', Tahoma, sans-serif;
+    opacity: 0;
+    transition: all 0.25s ease;
+}
+
+    /* افکت ورود نرم */
+    #rowDetailPopup.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* عنوان پاپ‌آپ */
+    #rowDetailPopup h3 {
+        text-align: center;
+        margin: 0 0 20px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #007bff;
+        border-bottom: 2px solid #007bff33;
+        padding-bottom: 10px;
+    }
+
+    /* هر ردیف جزئیات */
+    #rowDetailPopup .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e0e0e0;
+        line-height: 1.8;
+    }
+
+        #rowDetailPopup .detail-row .label {
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        #rowDetailPopup .detail-row .value {
+            color: #444;
+            text-align: left;
+            direction: ltr;
+        }
+
+    /* دکمه بستن */
+    #rowDetailPopup button.close-btn {
+        background: linear-gradient(135deg,#007bff,#0056b3);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: block;
+        margin: 20px auto 0 auto;
+    }
+
+        #rowDetailPopup button.close-btn:hover {
+            background: linear-gradient(135deg,#0056b3,#003f7f);
+        }
+
+    /* اسکرول بار سفارشی */
+    #rowDetailPopup::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #rowDetailPopup::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+        #rowDetailPopup::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+
+/*استايل دكمه ها*/
+/* قرار بده در css اصلی یا داخل <style> */
+.class-1 .full-width-btn {
+    display: block !important; /* دکمه به صورت بلوک رفتار کند */
+    width: 100%; /* پر کردن تمام عرض والد */
+    box-sizing: border-box; /* شامل padding و border در محاسبه عرض شود */
+    padding: 10px 14px; /* فضای درونی مناسب */
+    border: none; /* در صورت نیاز حذف حاشیه */
+    border-radius: 6px; /* گوشه‌های نرم */
+    background: #007bff; /* رنگ پس‌زمینه — قابل تغییر */
+    color: #fff; /* رنگ متن */
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: background .15s ease, transform .08s ease;
+}
+
+.full-width-btn {
+    display: block !important; /* دکمه بلوکی بشه */
+    width: 100% !important; /* عرض کامل والد */
+    box-sizing: border-box; /* شامل padding و border در محاسبه */
+    font-size: 13px;
+}
+
+    /* افکت هوور/فشار */
+    .class-2 .full-width-btn:hover {
+        background: #0069e6;
+    }
+
+    .class-2 .full-width-btn:active {
+        transform: translateY(1px);
+    }
+
+    /* اگر بخوای دکمه غیرفعال هم داشته باشی */
+    .class-2 .full-width-btn:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+.controls-bar {
+    background: linear-gradient(90deg, #fffef4, #fff);
+    padding: 8px 12px;
+    border-radius: 16px;
+    direction: rtl;
+    border: 1px solid #bcc4ca;
+}

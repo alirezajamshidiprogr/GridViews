@@ -152,6 +152,8 @@ namespace GridView.Controllers
         [HttpPost]
         public IActionResult GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping([FromBody] GridRequest request)
         {
+            if (request == null)
+                return BadRequest("Request is null or invalid JSON");
             //return GetGridData_PersonModel(request);
             return GetGridData_ProductSaleModel(request);
         }
@@ -169,7 +171,7 @@ namespace GridView.Controllers
             var salesPersons = new[] { "سارا", "امیر", "رضا", "لیلا" };
 
             var list = new List<ProductSaleModel>();
-            for (int i = 1; i <= 3000; i++)
+            for (int i = 1; i <= 280; i++)
             {
                 var qty = rnd.Next(1, 20);
                 var price = rnd.Next(100, 5000);
@@ -194,40 +196,57 @@ namespace GridView.Controllers
             }
 
             // --- فیلتر ---
+            // --- فیلتر پویا ---
+            IEnumerable<ProductSaleModel> query = list;
+
             if (request.Filters != null && request.Filters.Any())
             {
                 foreach (var f in request.Filters)
                 {
-                    if (!string.IsNullOrEmpty(f.Value))
-                    {
-                        // پیدا کردن Property بدون حساسیت به حروف بزرگ/کوچک
-                        var prop = typeof(ProductSaleModel).GetProperties()
-                                    .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+                    if (f.Value == null || string.IsNullOrEmpty(f.Value.Value)) 
+                        continue;
 
-                        if (prop != null)
+                    var key = f.Key;
+                    var filter = f.Value;
+                    var prop = typeof(ProductSaleModel).GetProperty(key);
+                    if (prop == null) 
+                        continue;
+
+                    query = query.Where(x =>
+                    {
+                        var val = prop.GetValue(x)?.ToString() ?? "";
+                        var filterVal = filter.Value;
+
+                        return filter.Type switch
                         {
-                            list = list.Where(x =>
-                            {
-                                var val = prop.GetValue(x)?.ToString() ?? "";
-                                return val.Contains(f.Value, StringComparison.OrdinalIgnoreCase);
-                            }).ToList();
-                        }
-                    }
+                            "eq" => val.Equals(filterVal, StringComparison.OrdinalIgnoreCase),
+                            "neq" => !val.Equals(filterVal, StringComparison.OrdinalIgnoreCase),
+                            "gt" => decimal.TryParse(val, out var v1) && decimal.TryParse(filterVal, out var f1) && v1 > f1,
+                            "lt" => decimal.TryParse(val, out var v2) && decimal.TryParse(filterVal, out var f2) && v2 < f2,
+                            "startswith" => val.StartsWith(filterVal, StringComparison.OrdinalIgnoreCase),
+                            "endswith" => val.EndsWith(filterVal, StringComparison.OrdinalIgnoreCase),
+                            "contains" => val.Contains(filterVal, StringComparison.OrdinalIgnoreCase),
+                            _ => true
+                        };
+                    });
                 }
             }
+
+
             // --- سورت ---
             if (!string.IsNullOrEmpty(request.SortColumn))
             {
                 var prop = typeof(ProductSaleModel).GetProperty(request.SortColumn);
                 if (prop != null)
                 {
-                    list = request.SortAsc
-                        ? list.OrderBy(x => prop.GetValue(x)).ToList()
-                        : list.OrderByDescending(x => prop.GetValue(x)).ToList();
+                    query = request.SortAsc
+                        ? query.OrderBy(x => prop.GetValue(x))
+                        : query.OrderByDescending(x => prop.GetValue(x));
                 }
             }
 
-            var totalCount = list.Count;
+
+            var totalCount = query.Count();
 
             // --- گروه‌بندی ---
             if (!string.IsNullOrEmpty(request.GroupBy))
@@ -235,7 +254,7 @@ namespace GridView.Controllers
                 var prop = typeof(ProductSaleModel).GetProperty(request.GroupBy);
                 if (prop != null)
                 {
-                    var grouped = list
+                    var grouped = query
                         .GroupBy(x => prop.GetValue(x))
                         .Select(g => new
                         {
@@ -253,29 +272,20 @@ namespace GridView.Controllers
                     });
                 }
             }
-            int page =0 ;
-            int pageSize= 0;
-            List<ProductSaleModel> data;
 
             // --- پیجینگ ---
-            if (request.enablePaging)
-            {
-                page = request.Page <= 0 ? 1 : request.Page;
-                pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-                data = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            }
-            else
-            {
-                page= 1;
-                pageSize = list.Count();
-                data = list;
-            }
-            // --- خروجی نهایی ---
+            int page = request.Page <= 0 ? 1 : request.Page;
+            int pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+
+            var data = request.enablePaging
+                ? query.Skip((page - 1) * pageSize).Take(pageSize).ToList()
+                : query.ToList();
+
             return Json(new
             {
                 TotalCount = totalCount,
                 Page = page,
-                PageSize = pageSize,
+                PageSize = request.enablePaging ? pageSize : totalCount,
                 Items = data
             });
         }
@@ -310,24 +320,61 @@ namespace GridView.Controllers
             // --- فیلتر ---
             if (request.Filters != null && request.Filters.Any())
             {
+                //foreach (var f in request.Filters)
+                //{
+                //    if (!string.IsNullOrEmpty(f.Value))
+                //    {
+                //        // پیدا کردن Property بدون حساسیت به حروف بزرگ/کوچک
+                //        var prop = typeof(PersonModel).GetProperties()
+                //                    .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+
+                //        if (prop != null)
+                //        {
+                //            list = list.Where(x =>
+                //            {
+                //                var val = prop.GetValue(x)?.ToString() ?? "";
+                //                return val.Contains(f.Value, StringComparison.OrdinalIgnoreCase);
+                //            }).ToList();
+                //        }
+                //    }
+                //}
+
+
                 foreach (var f in request.Filters)
                 {
-                    if (!string.IsNullOrEmpty(f.Value))
-                    {
-                        // پیدا کردن Property بدون حساسیت به حروف بزرگ/کوچک
-                        var prop = typeof(PersonModel).GetProperties()
-                                    .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+                    var prop = typeof(PersonModel).GetProperties()
+                                .FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
 
-                        if (prop != null)
-                        {
-                            list = list.Where(x =>
-                            {
-                                var val = prop.GetValue(x)?.ToString() ?? "";
-                                return val.Contains(f.Value, StringComparison.OrdinalIgnoreCase);
-                            }).ToList();
-                        }
-                    }
+                    //if (prop != null)
+                    //{
+                    //    string type = f.Value.Type ?? "contains";
+                    //    string val = f.Value.Value ?? "";
+
+                    //    list = list.Where(x =>
+                    //    {
+                    //        var propVal = prop.GetValue(x)?.ToString() ?? "";
+
+                    //        switch (type)
+                    //        {
+                    //            case "eq": return string.Equals(propVal, val, StringComparison.OrdinalIgnoreCase);
+                    //            case "neq": return !string.Equals(propVal, val, StringComparison.OrdinalIgnoreCase);
+                    //            case "gt":
+                    //                if (double.TryParse(propVal, out var n1) && double.TryParse(val, out var n2))
+                    //                    return n1 > n2;
+                    //                return false;
+                    //            case "lt":
+                    //                if (double.TryParse(propVal, out var n3) && double.TryParse(val, out var n4))
+                    //                    return n3 < n4;
+                    //                return false;
+                    //            case "startswith": return propVal.StartsWith(val, StringComparison.OrdinalIgnoreCase);
+                    //            case "endswith": return propVal.EndsWith(val, StringComparison.OrdinalIgnoreCase);
+                    //            case "contains":
+                    //            default: return propVal.Contains(val, StringComparison.OrdinalIgnoreCase);
+                    //        }
+                    //    }).ToList();
+                    //}
                 }
+
             }
             // --- سورت ---
             if (!string.IsNullOrEmpty(request.SortColumn))
@@ -409,26 +456,26 @@ namespace GridView.Controllers
             // فیلترها
             if (request.Filters != null)
             {
-                foreach (var f in request.Filters)
-                {
-                    if (!string.IsNullOrEmpty(f.Value))
-                    {
-                        var prop = typeof(ProductModel).GetProperty(f.Key);
-                        if (prop != null)
-                        {
-                            var propType = prop.PropertyType;
-                            if (propType == typeof(string))
-                                query = query.Where($"{f.Key}.Contains(@0)", f.Value);
-                            else
-                                query = query.Where($"{f.Key}.ToString().Contains(@0)", f.Value);
-                        }
-                        else
-                        {
-                            // ستون پیدا نشد، می‌توانید لاگ بگیرید یا از ادامه فیلتر بگذرید
-                            continue;
-                        }
-                    }
-                }
+                //foreach (var f in request.Filters)
+                //{
+                //    if (!string.IsNullOrEmpty(f.Value))
+                //    {
+                //        var prop = typeof(ProductModel).GetProperty(f.Key);
+                //        if (prop != null)
+                //        {
+                //            var propType = prop.PropertyType;
+                //            if (propType == typeof(string))
+                //                query = query.Where($"{f.Key}.Contains(@0)", f.Value);
+                //            else
+                //                query = query.Where($"{f.Key}.ToString().Contains(@0)", f.Value);
+                //        }
+                //        else
+                //        {
+                //            // ستون پیدا نشد، می‌توانید لاگ بگیرید یا از ادامه فیلتر بگذرید
+                //            continue;
+                //        }
+                //    }
+                //}
             }
 
             // مرتب‌سازی

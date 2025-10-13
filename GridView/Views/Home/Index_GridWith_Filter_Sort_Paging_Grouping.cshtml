@@ -1,23 +1,41 @@
 ﻿@using GridView.ViewModel;
+@using GridView.TagHelpers
+@using static GridView.TagHelpers.DynamicGridExtensions
+
 <link href="~/css/gridview.css" rel="stylesheet" />
 @model List<ProductSaleModel>
 
 @{
     var gridUrl = Url.Action("GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping", "Home");
 }
-<dynamic-grid url="@gridUrl"
-              Items="@Model.Cast<object>().ToList()"
-              enable-paging="true"
-              enable-filtering="true"
-              enable-sorting="true"
-              enable-footer="true"
-              enable-grouping="true">
-</dynamic-grid>
 
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+@(
+         Jamshidi_Grid()
+        .Url(gridUrl)
+        .GridName("grdProduct")
+        .Items(Model.Cast<object>().ToList())
+        .EnablePaging(false)
+        .EnableFiltering(true)
+        .EnableSorting(true)
+        .EnableFooter(true)
+        .EnableGrouping(true)
+        .EnableExcelExport(true)
+        .EnablePrint(true)
+        .EnableShowHiddenColumns(true)
+        .Build()
+)
 
 <script src="~/js/gridview.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
+    enableRowDetailsPopup();
 //document.addEventListener('DOMContentLoaded', () => {
 //    currentPage = 1;
 //    pageSize = 10; // یا هر مقدار دلخواه
