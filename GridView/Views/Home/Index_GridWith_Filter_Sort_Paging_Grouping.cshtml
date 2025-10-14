@@ -14,32 +14,47 @@
 
 
 @(
-         Jamshidi_Grid()
+         Jamshidi_Grid("grdProduct")
         .Url(gridUrl)
-        .GridName("grdProduct")
         .Items(Model.Cast<object>().ToList())
-        .EnablePaging(false)
+        .EnablePaging(true)
         .EnableFiltering(true)
         .EnableSorting(true)
         .EnableFooter(true)
         .EnableGrouping(true)
         .EnableExcelExport(true)
         .EnablePrint(true)
+        .EnableEditButton(true)
+        @*.EnableCheckBoxColumn(false)*@
+        .EnableDeleteButton(false)
+        .EnableInlineEdit(false)
         .EnableShowHiddenColumns(true)
         .Build()
 )
 
-<script src="~/js/gridview.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="~/js/gridview.js"></script>
 
 <script>
     enableRowDetailsPopup();
-//document.addEventListener('DOMContentLoaded', () => {
-//    currentPage = 1;
-//    pageSize = 10; // یا هر مقدار دلخواه
-//    fetchGridData(currentPage, pageSize); // ← لود اولیه
-//});
+    //document.addEventListener('DOMContentLoaded', () => {
+    //    currentPage = 1;
+    //    pageSize = 10; // یا هر مقدار دلخواه
+    //    fetchGridData(currentPage, pageSize); // ← لود اولیه
+    //});
+
+// نمونه فراخوانی تابع با پارامتر استایل:
+window.onload = () => {
+    setTimeout(() => {
+        applyStylesToGridRows(
+            { color: 'red', 'font-size': '14px' },
+            { 
+                Id: '5',                          // فقط ردیفی که Id=5
+                Category: ['کامپیوتر', 'الکترونیک'] // و Category یکی از این دو مقدار باشد
+            }
+        );
+    }, 100);
+};
 </script>
 

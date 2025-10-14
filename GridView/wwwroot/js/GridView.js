@@ -83,6 +83,7 @@ function renderRows(items, columns = null) {
             // اگر ستون مخفی است
             if (!col.visible) {
                 div.style.display = 'none';
+                div.className = 'grid-cell grid-cell-hidden';
             }
 
             row.appendChild(div);
@@ -92,10 +93,16 @@ function renderRows(items, columns = null) {
         const actions = document.createElement('div');
         actions.className = 'grid-cell';
 
-        actions.innerHTML = `
-            <button class="btn primary edit-btn" onclick='InsUpd_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 20h9'></path><path d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'></path></svg>ويرايش</button>
-            <button class="btn danger delete-btn" onclick='Dlt_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'></path><path d='M10 11v6'></path><path d='M14 11v6'></path></svg> حذف</button>
-        `;
+        var enableEditBuuton = document.getElementById('gridData')?.dataset.editButton === 'true';
+        var enabelDeleteButton = document.getElementById('gridData')?.dataset.deleteButton === 'true';
+
+        if (enableEditBuuton) {
+            actions.innerHTML = `<button class="btn primary edit-btn" onclick='InsUpd_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 20h9'></path><path d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'></path></svg>ويرايش</button>`;
+        }
+        if (enabelDeleteButton) {
+            actions.innerHTML += `<button class="btn danger delete-btn" onclick='Dlt_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'></path><path d='M10 11v6'></path><path d='M14 11v6'></path></svg> حذف</button>`;
+        }
+
         row.appendChild(actions);
 
         bodyContainer.appendChild(row);
@@ -125,7 +132,7 @@ function groupItems(items, groupByField) {
 
 // فراخوانی داده‌ها
 function fetchGridData(page, size) {
-    enablePaging = document.getElementById('gridSettings')?.dataset.enablePaging === 'true';
+    enablePaging = document.getElementById('gridData')?.dataset.enablePaging === 'true';
 
     const urlElement = document.getElementById('gridData');
     const localDataElement = document.getElementById('gridDataLocal');
@@ -256,6 +263,7 @@ function renderGroupedRows(groups, columns) {
                 // اگر ستون مخفی است
                 if (!col.visible) {
                     div.style.display = 'none';
+                    div.className = 'grid-cell grid-cell-hidden';
                 }
                 row.appendChild(div);
             });
@@ -436,7 +444,7 @@ document.querySelectorAll('.grid-cell[data-footer]').forEach(cell => {
         const clone = menu.cloneNode(true);
         clone.classList.add('clone');
         document.body.appendChild(clone);
-
+        debugger
         const rect = icon.getBoundingClientRect();
         clone.style.position = 'absolute';
         clone.style.top = (rect.bottom + window.scrollY) + 'px';
@@ -827,10 +835,14 @@ function enableRowDetailsPopup() {
 function displayGridColumns() {
     $('#columnSelectorPopup').remove();
 
-    // گرفتن همه ستون‌ها (چه مخفی چه نمایش داده شده)
+    // گرفتن همه ستون‌ها (چه مخفی چه نمایش داده شده) ولی ستون‌های کاربر مخفی شده را نادیده بگیر
     const columns = $('.grid-header .grid-cell').filter(function () {
-        const text = $(this).clone().children().remove().end().text().replace(/[▲▼]/g, '').trim();
-        return text !== 'عملیات';
+        const $this = $(this);
+        const text = $this.clone().children().remove().end().text().replace(/[▲▼]/g, '').trim();
+
+        // فقط ستون‌هایی که کلاس grid-cell-hidden ندارند و متن معتبر دارند
+        const isHiddenPermanently = $this.hasClass('grid-cell-hidden');
+        return text !== 'عملیات' && !isHiddenPermanently && text.length > 0;
     });
 
     // ساخت HTML Popup
@@ -838,12 +850,18 @@ function displayGridColumns() {
         <h3 style="margin-bottom: 15px;">ستون‌هایی که می‌خواهید نمایش داده شوند را انتخاب کنید:</h3>`;
 
     columns.each(function (i) {
-        const prop = $(this).data('column') || $(this).attr('data-cell') || i;
-        const text = $(this).clone().children().remove().end().text().replace(/[▲▼]/g, '').trim();
-        const visible = $(this).css('display') !== 'none';
+        const $this = $(this);
+        debugger
+        // فقط ستون‌هایی که کلاس grid-cell-hidden ندارند
+        if ($this.hasClass('grid-cell-hidden')) return; // رد کردن ستون مخفی دائمی
+
+        const prop = $this.data('column') || $this.attr('data-cell') || i;
+        const text = $this.clone().children().remove().end().text().replace(/[▲▼]/g, '').trim();
+        const visible = $this.css('display') !== 'none'; // اگر ستون الان نمایش دارد، تیک بخورد
+
         selectorHtml += `<label style="display:block; margin-bottom: 8px; font-size: 14px;">
-            <input type="checkbox" data-prop="${prop}" ${visible ? 'checked' : ''}> ${i + 1}. ${text}
-        </label>`;
+        <input type="checkbox" data-prop="${prop}" ${visible ? 'checked' : ''}> ${i + 1}. ${text}
+    </label>`;
     });
 
     selectorHtml += `
@@ -886,6 +904,128 @@ function displayGridColumns() {
     });
 }
 ///////////////////////////////////////////
+
+
+//تغيير عرض ستونهاي گريد
+
+$(document).ready(function () {
+    const isRTL = $('html').attr('dir') === 'rtl';
+    $('.grid-header .grid-cell').css('position', 'relative');
+
+    $('.grid-header .grid-cell').each(function () {
+        const $cell = $(this);
+
+        // اضافه کردن resizer
+        const $resizer = $('<div class="resizer"></div>').appendTo($cell);
+        $resizer.css({
+            position: 'absolute',
+            top: '0',
+            width: '6px',
+            height: '100%',
+            cursor: 'col-resize',
+            zIndex: 5,
+            [isRTL ? 'left' : 'right']: '0'
+        });
+
+        let startX, startWidth, prop, handleSide;
+
+        $resizer.on('mousedown', function (e) {
+            e.preventDefault(); // جلوگیری از انتخاب متن
+
+            startX = e.pageX;
+            startWidth = $cell.outerWidth();
+            prop =
+                $cell.data('column') ||
+                $cell.data('cell') ||
+                $cell.data('footer') ||
+                $cell.attr('data-cell');
+
+            // تشخیص سمت واقعی resizer
+            const leftCss = $resizer.css('left');
+            const rightCss = $resizer.css('right');
+            if (leftCss && leftCss !== 'auto' && leftCss !== '0px') {
+                handleSide = 'left';
+            } else if (rightCss && rightCss !== 'auto' && rightCss !== '0px') {
+                handleSide = 'right';
+            } else {
+                handleSide = isRTL ? 'left' : 'right';
+            }
+
+            $(document).on('mousemove.resizeColumn', function (e) {
+                const delta = e.pageX - startX;
+
+                const newWidth = handleSide === 'right'
+                    ? startWidth + delta
+                    : startWidth - delta;
+
+                if (newWidth > 40) {
+                    const newCss = {
+                        width: newWidth + 'px',
+                        flex: '0 0 ' + newWidth + 'px'
+                    };
+
+                    // 🔥 تغییر عرض در تمام بخش‌های گرید
+                    $(`.grid-header .grid-cell[data-cell="${prop}"],
+                           .grid-header .grid-cell[data-column="${prop}"],
+                           .grid-header .grid-cell[data-footer="${prop}"],
+                           .grid-body .grid-cell[data-cell="${prop}"],
+                           .grid-body .grid-cell[data-column="${prop}"],
+                           .grid-body .grid-cell[data-footer="${prop}"],
+                           .grid-filters .grid-cell[data-cell="${prop}"],
+                           .grid-filters .grid-cell[data-column="${prop}"],
+                           .grid-filters .grid-cell[data-footer="${prop}"],
+                           .grid-footer .grid-cell[data-cell="${prop}"],
+                           .grid-footer .grid-cell[data-column="${prop}"],
+                           .grid-footer .grid-cell[data-footer="${prop}"]`
+                    ).css(newCss);
+                }
+            });
+
+            $(document).on('mouseup.resizeColumn', function () {
+                $(document).off('.resizeColumn');
+            });
+        });
+    });
+});
+
+// يوزر استايل row
+function applyStylesToGridRows(styles, condition) {
+    const rows = document.querySelectorAll('.grid-row');
+
+    rows.forEach(row => {
+        let match = true;
+
+        if (condition) {
+            for (const key in condition) {
+                const cell = row.querySelector(`[data-cell="${key}"]`);
+                const cellValue = cell ? cell.textContent.trim() : "";
+
+                const condValue = condition[key];
+
+                if (Array.isArray(condValue)) {
+                    // اگر مقدار آرایه بود، چک کن یکی از آنها برابر باشد
+                    if (!condValue.includes(cellValue)) {
+                        match = false;
+                        break;
+                    }
+                } else {
+                    // اگر مقدار تک بود، مستقیم مقایسه
+                    if (cellValue !== condValue.toString()) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!match) return;
+
+        for (const property in styles) {
+            row.style.setProperty(property, styles[property], 'important');
+        }
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', initGrid);
 

@@ -10,10 +10,13 @@ namespace GridView.TagHelpers
     public class DynamicGridBuilder
     {
         private List<object> _items = new List<object>();
-        private string _gridName;
+        private readonly string _gridName;
         private string _url;
         private bool _enablePaging = true;
+        private bool _enableEditButton = true;
+        private bool _enableDeleteButton = true;
         private bool _enableFiltering = true;
+        private bool _enableInlineEdit = true;
         private bool _enableSorting = true;
         private bool _enableFooter = false;
         private bool _enableGrouping = true;
@@ -21,8 +24,13 @@ namespace GridView.TagHelpers
         private bool _enablePrint = true;
         private bool _enableShowHiddenColumns = true;
 
+        public DynamicGridBuilder(string gridName)
+        {
+            _gridName = gridName;
+        }
+
         public DynamicGridBuilder Items(List<object> items) { _items = items; return this; }
-        public DynamicGridBuilder GridName(string name) { _gridName = name; return this; }
+        //public DynamicGridBuilder GridName(string name) { _gridName = name; return this; }
         public DynamicGridBuilder Url(string url) { _url = url; return this; }
         public DynamicGridBuilder EnablePaging(bool val) { _enablePaging = val; return this; }
         public DynamicGridBuilder EnableFiltering(bool val) { _enableFiltering = val; return this; }
@@ -31,6 +39,9 @@ namespace GridView.TagHelpers
         public DynamicGridBuilder EnableGrouping(bool val) { _enableGrouping = _enablePaging ? false : val; return this; }
         public DynamicGridBuilder EnableExcelExport(bool val) { _enableExcelExport = val; return this; }
         public DynamicGridBuilder EnablePrint(bool val) { _enablePrint = val; return this; }
+        public DynamicGridBuilder EnableEditButton(bool val) { _enableEditButton = val; return this; }
+        public DynamicGridBuilder EnableDeleteButton(bool val) { _enableDeleteButton = val; return this; }
+        public DynamicGridBuilder EnableInlineEdit(bool val) { _enableInlineEdit = val; return this; }
         public DynamicGridBuilder EnableShowHiddenColumns(bool val) { _enableShowHiddenColumns = val; return this; }
 
         public IHtmlContent Build()
@@ -46,10 +57,19 @@ namespace GridView.TagHelpers
             }
 
             html = $"<div id='{_gridName}' class='dynamic-grid-container'>";
+            html += $@"
+                    <div id='gridData'
+                         data-url='{_url ?? ""}'
+                         data-enable-paging='{_enablePaging.ToString().ToLower()}'
+                         data-edit-button='{_enableEditButton.ToString().ToLower()}'
+                         data-delete-button='{_enableDeleteButton.ToString().ToLower()}'
+                         style='display:none;'>
+                    </div>";
 
-            html += $"<div id='gridData' data-url='{_url ?? ""}' style='display:none;'></div>";
-
-            html += $"<div id='gridSettings' data-enable-paging='{_enablePaging.ToString().ToLower()}'></div>";
+            
+            //html += $"<div id='gridSettings' data-enable-paging='{_enablePaging.ToString().ToLower()}'></div>";
+            //html += $"<div id='enabelEditButton' data-edit-button='{_enableEditButton.ToString().ToLower()}'></div>";
+            //html += $"<div id='enabelDeleteButton' data-edit-button='{_enableDeleteButton.ToString().ToLower()}'></div>";
 
             html += "<div id='gridContainerWrapper'>";
             html += "<div class='row controls controls-bar'>";
@@ -127,8 +147,10 @@ namespace GridView.TagHelpers
                 foreach (var col in columnsMeta)
                 {
                     var style = col.Attr.Visible ? "" : "style='display:none;'";
+                    var className = col.Attr.Visible ? "grid-cell" : "grid-cell grid-cell-hidden";
+
                     var sortIcons = _enableSorting && col.Attr.EnableSorting ? " ▲▼" : "";
-                    html += $"<div class='grid-cell' {style} data-column='{col.Prop.Name}'>{col.Attr.Header}{sortIcons}</div>";
+                    html += $"<div class='{className}' {style} data-column='{col.Prop.Name}'>{col.Attr.Header}{sortIcons}</div>";
                 }
                 html += "<div class='grid-cell'>عملیات</div>";
                 html += "</div>";
@@ -141,7 +163,9 @@ namespace GridView.TagHelpers
                     {
                         if (!col.Attr.EnableFiltering) continue;
                         var style = col.Attr.Visible ? "" : "style='display:none;'";
-                        html += $"<div class='grid-cell' {style} data-column='{col.Prop.Name}' style='position:relative;'>" +
+                        var className = col.Attr.Visible? "grid-cell" : "grid-cell grid-cell-hidden";
+
+                        html += $"<div class='{className}' {style} data-column='{col.Prop.Name}' style='position:relative;'>" +
                                 $"<input type='text'  class='filter-input' data-prop='{col.Prop.Name}' placeholder='جستجو {col.Attr.Header}' />" +
                                 $"<span class='filter-icon'>&#128269;</span>" +
                                 $"<ul class='filter-menu'>" +
@@ -170,6 +194,8 @@ namespace GridView.TagHelpers
                         var style = col.Attr.Visible ? "" : "style='display:none;'";
                         html += $"<div class='grid-cell' data-cell={col.Prop.Name} {style}>{value}</div>";
                     }
+
+
                     html += "<div class='grid-cell'><button class='btn primary edit-btn'>ویرایش</button>" +
                             "<button class='btn danger delete-btn'>حذف</button></div>";
                     html += "</div>";
@@ -255,6 +281,7 @@ namespace GridView.TagHelpers
 
     public static class DynamicGridExtensions
     {
-        public static DynamicGridBuilder Jamshidi_Grid() => new DynamicGridBuilder();
+        public static DynamicGridBuilder Jamshidi_Grid(string gridName)
+                => new DynamicGridBuilder(gridName);
     }
 }

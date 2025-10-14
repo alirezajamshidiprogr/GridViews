@@ -1,59 +1,35 @@
 ﻿/* تعریف فونت‌ها */
-@font-face {
-    font-family: 'YekanBakh';
-    src: url('../fonts/yekanbakh-regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
 
-@font-face {
-    font-family: 'YekanBakh';
-    src: url('../fonts/yekanbakh-heavy.ttf') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'YekanBakh';
-    src: url('../fonts/yekanbakh-light.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'yekan';
-    src: url('../fonts/yekan.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'iranian sans';
-    src: url('../fonts/iranian sans.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'vazir-bold';
-    src: url('../fonts/vazir-bold.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-}
 @font-face {
     font-family: 'vazir-light';
     src: url('../fonts/vazir-light.ttf') format('truetype');
     font-weight: 300;
     font-style: normal;
 }
-@font-face {
-    font-family: 'vazir-medium';
-    src: url('../fonts/vazir-medium.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
-@font-face {
-    font-family: 'yekan bakh regular';
-    src: url('../fonts/yekan bakh regular.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden; /* جلوگیری از scroll افقی ناخواسته */
+}
+
+.dynamic-grid-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* مهم برای جلوگیری از overflow داخلی flex */
+}
+
+.dynamic-grid-container {
+    flex: 1; /* گرید تمام فضای باقی‌مانده را پر می‌کند */
+    display: flex;
+    flex-direction: column;
 }
 
 #gridContainer,
@@ -87,7 +63,6 @@
 /* --- فقط این بخش اسکرول افقی دارد --- */
 #gridContainerWrapper {
     overflow-x: auto;
-    overflow-y: hidden;
     width: 100%;
 }
 .grid-cell .btn {
@@ -333,7 +308,10 @@
 
 
 
-
+#gridContainer {
+    min-width: 100%;
+    display: block;
+}
 
 
 /* ردیف‌های گرید */
@@ -768,10 +746,12 @@ select option {
 }
 
 .full-width-btn {
-    display: block !important; /* دکمه بلوکی بشه */
-    width: 100% !important; /* عرض کامل والد */
-    box-sizing: border-box; /* شامل padding و border در محاسبه */
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
     font-size: 13px;
+    margin: 0 auto; /* مرکز شدن دکمه */
+    max-width: 300px; /* حداکثر عرض دکمه برای مانیتورهای بزرگ */
 }
 
     /* افکت هوور/فشار */
@@ -790,9 +770,16 @@ select option {
     }
 
 .controls-bar {
-    background: linear-gradient(90deg, #fffef4, #fff);
+  /*  display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: max-content;
+    box-sizing: border-box;
     padding: 8px 12px;
+    background: linear-gradient(90deg, #fffef4, #fff);
     border-radius: 16px;
+    border: 1px solid #bcc4ca;*/
     direction: rtl;
-    border: 1px solid #bcc4ca;
 }
+
+   
