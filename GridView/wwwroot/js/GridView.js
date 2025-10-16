@@ -997,19 +997,20 @@ function applyStylesToGridRows(styles, condition) {
 
         if (condition) {
             for (const key in condition) {
-                const cell = row.querySelector(`[data-cell="${key}"]`);
-                const cellValue = cell ? cell.textContent.trim() : "";
+                const keyLower = key.toLowerCase(); // ✅ همیشه lowercase
+                // جستجوی سلولی که data-cell برابر با key (بدون حساسیت به حروف) باشد
+                const cell = Array.from(row.querySelectorAll('[data-cell]'))
+                    .find(c => c.dataset.cell.toLowerCase() === keyLower);
 
+                const cellValue = cell ? cell.textContent.trim() : "";
                 const condValue = condition[key];
 
                 if (Array.isArray(condValue)) {
-                    // اگر مقدار آرایه بود، چک کن یکی از آنها برابر باشد
-                    if (!condValue.includes(cellValue)) {
+                    if (!condValue.map(v => v.toString()).includes(cellValue)) {
                         match = false;
                         break;
                     }
                 } else {
-                    // اگر مقدار تک بود، مستقیم مقایسه
                     if (cellValue !== condValue.toString()) {
                         match = false;
                         break;

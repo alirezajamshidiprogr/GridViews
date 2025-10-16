@@ -9,9 +9,10 @@
     var gridUrl = Url.Action("GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping", "Home");
 }
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+@*<link rel="stylesheet"   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">*@
 
+
+<link href="~/font-awsome/font-awesome.min.css" rel="stylesheet" />
 
 @(
          Jamshidi_Grid("grdProduct")
@@ -31,9 +32,10 @@
         .EnableShowHiddenColumns(true)
         .Build()
 )
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="~/js/jquery-3.7.1.js"></script>
+<script src="~/js/xlsx.full.min.js"></script>
+@*<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>*@
+@*<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>*@
 <script src="~/js/gridview.js"></script>
 
 <script>
@@ -49,9 +51,9 @@ window.onload = () => {
     setTimeout(() => {
         applyStylesToGridRows(
             { color: 'red', 'font-size': '14px' },
-            { 
-                Id: '5',                          // فقط ردیفی که Id=5
-                Category: ['کامپیوتر', 'الکترونیک'] // و Category یکی از این دو مقدار باشد
+            {
+                    iD: ['1', '3'] ,
+                    Category: ['کامپیوتر', 'الکترونیک'] 
             }
         );
     }, 100);
