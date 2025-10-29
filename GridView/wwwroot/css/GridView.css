@@ -1,267 +1,228 @@
-﻿/* تعریف فونت‌ها */
-
-@font-face {
+﻿@font-face {
     font-family: 'vazir-light';
     src: url('../fonts/vazir-light.ttf') format('truetype');
     font-weight: 300;
     font-style: normal;
 }
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+
+.grid-group-header {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0; 
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ccc;
+    cursor: default; 
+    user-select: none;
 }
 
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden; /* جلوگیری از scroll افقی ناخواسته */
+    .grid-group-header span:first-child {
+        cursor: pointer;
+        margin-right: 8px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .grid-group-header span:last-child {
+        flex: 1; 
+    }
+
+    .grid-group-header span:first-child:hover {
+        color: #0056b3;
+    }
+
+
+.grid-row.collapsed {
+    display: none;
 }
+
+
 
 .dynamic-grid-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0; /* مهم برای جلوگیری از overflow داخلی flex */
-}
-
-.dynamic-grid-container {
-    flex: 1; /* گرید تمام فضای باقی‌مانده را پر می‌کند */
-    display: flex;
-    flex-direction: column;
-}
-
-#gridContainer,
-.grid-header,
-.grid-cell,
-.grid-filters,
-.grid-body {
-    font-family: 'vazir-light', sans-serif;
-    font-size: 13px; /* می‌تونی کم یا زیاد کنی */
-    direction: rtl; /* راست‌چین */
-    text-align: right; /* متن سلول‌ها راست‌چین */
-    overflow-y: visible; /* یا حداقل برای منوی filter overflow: visible */
-}
-.grid-cell {
-    padding: 6px 10px; /* فضای کافی بین متن و مرز سلول */
-    white-space: nowrap; /* جلوگیری از شکستن کلمات */
-    overflow: hidden;
-    text-overflow: ellipsis; /* … اگر متن طولانی بود */
-}
-
-/* --- کانتینر اصلی --- */
-.dynamic-grid-container {
-    display: flex;
+    display: flex; 
     flex-direction: column;
     font-family: 'vazir-light', sans-serif;
-    background: #f4f6f9;
-    padding: 10px;
+    min-width: 0; 
+    width: 100%; 
+    position: relative; 
+    box-sizing: border-box; 
+    overflow-x: auto; 
     direction: rtl;
 }
 
-/* --- فقط این بخش اسکرول افقی دارد --- */
-#gridContainerWrapper {
-    overflow-x: auto;
-    width: 100%;
-}
-.grid-cell .btn {
+
+#gridContainer,
+#gridContainer.grid-header,
+#gridContainer.grid-body.grid-row.grid-cell,
+#gridContainer.grid-filters,
+#gridContainer.grid-body {
+    font-family: 'vazir-light', sans-serif;
     font-size: 13px;
-    display: inline-flex; /* مطمئن می‌شویم svg و متن کنار هم هستند */
-    align-items: center;
-    gap: 6px; /* فاصله بین آیکون و متن */
-}
-    .grid-cell .btn{
-        margin-left: 8px; /* فاصله بین دو دکمه */
-    }
-
-
-.grid-footer {
-    display: flex;
-    width: 100%; /* تغییر از max-content به 100% */
-    background: #f8f9fa;
-    font-weight: bold;
-    border-top: 2px solid #ccc;
+    direction: rtl; 
+    text-align: right; 
+    overflow-y: visible; 
 }
 
-    .grid-footer .grid-row.footer-row {
-        display: flex;
-        width: 100%; /* همسان با grid-footer */
-    }
 
-    .grid-footer .grid-cell {
-        flex: 1;
-        min-width: 120px; /* همانند grid-row های اصلی */
-        padding: 6px 8px;
-        box-sizing: border-box;
-        text-align: center;
-    }
-/* --- گرید اصلی --- */
-.grid-container {
-    overflow: visible !important; /* خودش اسکرول نخورد */
+#gridContainerWrapper .grid-container {
+    overflow: visible !important;
     width: max-content;
     min-width: 100%;
     display: block;
 }
-.grid-header .grid-cell {
+
+#gridContainer .grid-header .grid-cell {
     border-left: 1px solid #e1e1e1;
-    border-bottom:none !important ;
+    border-bottom: none !important;
     text-align: center;
     font-size: 1.2em;
     align-content: center;
     text-align: center;
-    cursor: pointer; /* نشانگر pointer روی هدر */
+    cursor: pointer;
     transition: background-color 0.3s ease;
 }
-/* --- ساختار اصلی جدول --- */
-.grid-header,
-.grid-filters,
-.grid-row {
+
+#gridContainerWrapper .grid-container .grid-header {
+    font-weight: bold;
+    background: #3498db;
+    color: #fff;
+    border-left: 1px solid gray;
+    min-width: max-content;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+}
+
+.grid-header .grid-cell,
+.grid-row .grid-cell,
+.grid-filters .grid-cell {
+    flex: 1;
+    min-width: 120px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ddd;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    display: flex; /* فعال کردن Flexbox */
+    justify-content: center; /* وسط چین افقی محتوا */
+    align-items: center; /* وسط چین عمودی محتوا */
+    text-align: center;
     display: flex;
     min-width: max-content;
 }
 
-.grid-header {
-    font-weight: bold;
-    background: #3498db;
+
+#gridContainerWrapper .grid-container .grid-filters {
+    display: flex;
+    min-width: max-content;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f4f6f9; 
+    font-size: 13px;
+    min-width: max-content;
+    position: sticky;
+    top: 0; 
+    z-index: 2;
     color: #fff;
-    border-left: 1px solid gray ;
 }
 
-    /* --- سلول‌ها --- */
-    .grid-header .grid-cell,
-    .grid-row .grid-cell,
-    .grid-filters .grid-cell {
-        flex: 1;
-        min-width: 120px;
-        padding: 6px 8px;
-        border-bottom: 1px solid #ddd;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        display: flex; /* فعال کردن Flexbox */
-        justify-content: center; /* وسط چین افقی محتوا */
-        align-items: center; /* وسط چین عمودی محتوا */
-        text-align: center;
 
+    #gridContainerWrapper .grid-container .grid-filters input.filter-input {
+        width: 100%; 
+        box-sizing: border-box;
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+        text-align: left;
     }
 
-/* --- ورودی فیلتر --- */
-.grid-filters .grid-cell {
-    flex: 1; /* اجازه می‌دهد سلول با header هماهنگ شود */
-    min-width: 120px; /* همانند header */
-    padding: 4px 8px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center; /* وسط چین افقی محتوا */
-    align-items: center; /* وسط چین عمودی محتوا */
-    position: relative; /* برای آیکون و منو */
-    transition: width 0.3s ease; /* برای تغییر width هنگام hide/show */
-}
-
-.grid-filters input.filter-input {
-    width: 100%; /* پر کردن تمام سلول */
-    box-sizing: border-box;
-    padding: 4px 6px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 13px;
-    text-align: left;
-}
-/* وقتی ستون مخفی است، سلول مربوطه در filter هم مخفی شود */
 .grid-filters .grid-cell[data-column="Id"] {
-    display: none; /* مثال برای ستون Id */
-}
-
-.footer-row .grid-cell input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 4px 6px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 13px;
-    margin: 0 auto; /* وسط چین کردن input */
-    text-align: center; /* متن داخل input وسط‌چین */
+    display: none; 
 }
 
 
-/* --- گروه‌بندی --- */
-.group-row {
-    font-weight: bold;
-    background: #f0f0f0;
-    padding: 6px;
-    margin-top: 4px;
-}
-
-/* --- کنترل‌ها --- */
-.controls {
+#gridContainerWrapper .controls {
+    padding:15px;
+    margin-bottom:15px;
+    font-size:13px;
+    background:#fff;
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
     flex-wrap: wrap;
+    /*background: linear-gradient(135deg, rgb(240, 247, 255), rgb(249, 252, 255)) !important;*/
+    display: flex;
+    align-items: center;
+    /*justify-content: space-between;*/
+    padding: 8px 16px;
+    /*background: #f0f4f8;*/
+    border-radius: 12px;
+    color: #0a334f;
+    font-family: 'vazir-light', sans-serif;
+    direction: rtl;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
 }
 
-    .controls .left {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .controls .right {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-/* --- دکمه‌ها --- */
-.btn {
+.grid-container .grid-body .grid-row .grid-cell .btn {
     padding: 4px 8px;
     border-radius: 4px;
     border: none;
     cursor: pointer;
 }
 
-    .btn.primary {
-        background: #3498db;
-        color: #fff;
+.grid-container .grid-body .grid-row .grid-cell-Buttons{
+    gap:5px;
+}
+.grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary {
+    background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
+    color: #fff !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    gap: 5px;
+}
+
+    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary:hover {
+        background: linear-gradient(135deg,#0056b3,#003f7f) !important;
+        transform: scale(1.05);
     }
 
-    .btn.danger {
-        background: #e74c3c;
-        color: #fff;
+.grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger {
+    background: linear-gradient(135deg, rgb(220, 53, 69), rgb(179, 0, 0)) !important;
+    color: #fff !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger:hover {
+        background: linear-gradient(135deg, rgb(200, 35, 51), rgb(150, 0, 0)) !important;
+        transform: scale(1.05);
     }
 
-/* فوتر گريد  */
-
-.pagination {
+.dynamic-grid-container .pagination {
+    background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 16px;
-    background: #f0f4f8; /* ملایم و روشن */
-    border-radius: 12px; /* گوشه‌های نرم‌تر */
-    color: #3498db; /* رنگ متن جذاب ولی ملایم */
+    background: #f0f4f8; 
+    border-radius: 12px; 
+    color: #3498db; 
     font-family: 'vazir-light', sans-serif;
     direction: rtl;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* سایه خیلی ملایم */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
     transition: background 0.3s ease;
 }
 
-    .pagination .pagination-center {
-        display: flex;
-        align-items: center;
-        gap: 15px; /* فاصله بین متن و سلکت */
-    }
-
-    .pagination label {
+    .dynamic-grid-container .pagination label {
         font-size: 13px;
         display: flex;
         align-items: center;
         gap: 6px;
     }
 
-    .pagination select {
+    .dynamic-grid-container .pagination select {
         padding: 4px 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
@@ -272,117 +233,76 @@ body {
         color: #3498db;
     }
 
-        .pagination select:hover {
+        .dynamic-grid-container .pagination select:hover {
             background: #f0f4f8;
         }
 
-.pagination-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: #3498db; /* رنگ ملایم دکمه */
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-    .pagination-btn:hover {
-        background: #2980b9;
-        transform: translateY(-1px);
+    .dynamic-grid-container .pagination .pagination-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: #16174d; 
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
     }
 
-#pageInfo {
-    font-size: 14px;
-    font-weight: bold;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: rgba(52, 152, 219, 0.1); /* ملایم */
-    color: #2980b9;
+        .dynamic-grid-container .pagination .pagination-btn:hover {
+            background: #042337;
+            transform: translateY(-1px);
+        }
+
+    .dynamic-grid-container .pagination #pageInfo {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(52, 152, 219, 0.1); 
+        color: #fff;
+    }
+
+.grid-container .grid-body .grid-row:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
-
-
-#gridContainer {
-    min-width: 100%;
-    display: block;
+.grid-container .grid-body .grid-row:nth-child(odd) {
+    background-color: #ffffff;
 }
 
-
-/* ردیف‌های گرید */
-.grid-row:nth-child(even) {
-    background-color: #f9f9f9; /* ردیف‌های زوج رنگ روشن */
-}
-
-.grid-row:nth-child(odd) {
-    background-color: #ffffff; /* ردیف‌های فرد سفید */
-}
-
-/* هاور ردیف */
-.grid-row:hover {
-    background-color: #d6eaf8; /* رنگ روشن آبی هنگام هاور */
+.grid-container .grid-body .grid-row:hover {
+    background-color: #d6eaf8;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-/* اگر بخواهیم سلول‌ها هم کمی انیمیشن داشته باشند */
-.grid-row .grid-cell {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* جلوگیری از اسکرول داخلی در gridContainer */
-/*#gridContainer {
-    overflow: visible !important;
-    width: max-content;*/ /* اجازه بده محتوا عرض خودش رو تعیین کنه */
-    /*min-width: 100%;
-}*/
-
-/* فقط wrapper حق اسکرول داره */
-#gridContainerWrapper {
+.dynamic-grid-container #gridContainerWrapper {
     overflow-x: auto;
- /*   overflow-y: hidden;
-    width: 100%;*/
 }
 
-.grid-header, .grid-filters {
-    display: flex;
-    min-width: max-content;
-    position: sticky;
-    top: 0; /* بالای کانتینر */
-    z-index: 2;
-    color: #fff;
-}
-
-.grid-filters {
-    display: flex;
-    min-width: max-content;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #f4f6f9; /* یا رنگ دلخواه */
-    color: #000; /* رنگ متن */
-    font-size: 13px;
-}
-
-
-.grid-body {
+.grid-container .grid-body {
     display: block;
-    max-height: 700px; /* ارتفاع موردنظر */
+    max-height: 700px; 
     overflow-y: auto;
 }
 
-.grid-row {
+.grid-body .grid-row {
     display: flex;
     min-width: max-content;
 }
 
-.grid-cell {
-    position: relative; /* والد برای منوی مطلق */
+.grid-container .grid-footer .footer-row {
+    display: flex;
+    min-width: max-content;
+}
+
+.grid-container .footer-row .grid-cell {
+    position: relative; 
 }
 
 .filter-icon {
@@ -399,7 +319,7 @@ body {
 .filter-menu {
     top: calc(100% + 2px);
     display: none;
-    position: absolute; /* بسیار مهم */
+    position: absolute;
     right: 0;
     background: white;
     border: 1px solid #ccc;
@@ -407,7 +327,7 @@ body {
     padding: 0;
     margin: 0;
     width: 60px;
-    z-index: 1000; /* روی همه چیز نمایش داده شود */
+    z-index: 1000; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     width: 158px;
     text-align: center;
@@ -424,43 +344,43 @@ body {
             background: #eee;
         }
 
-.grid-cell[data-footer] {
-    /*background-color: #3498db;*/ /* رنگ پس‌زمینه */
-    color: black; /* رنگ متن */
-    font-weight: bold; /* پررنگ */
-    font-size: 1.1em; /* کمی بزرگتر از متن معمولی */
-    border: 1px solid #ffffff50; /* حاشیه ملایم */
-    padding: 6px 10px; /* فاصله داخلی */
+.grid-footer .footer-row .grid-cell[data-footer] {
+    background-color: #fff;
+    color: black;
+    font-weight: bold;
+    font-size: 1.1em;
+    border-top: 3px solid #2f18184f;
+    padding: 6px 10px;
     text-align: right;
 }
 
 
-.footer-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 4px 24px 4px 8px;
-    font-size: 0.9em;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+    .grid-footer .footer-row .grid-cell[data-footer] .footer-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 4px 24px 4px 8px;
+        font-size: 0.9em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
 
-.footer-icon {
-    position: absolute;
-    right: 11%;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    z-index: 2;
-    color: #3498db;
-    font-size: 17px;
-}
+    .grid-footer .footer-row .grid-cell[data-footer] .footer-icon {
+        position: absolute;
+        right: 11%;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        z-index: 2;
+        color: #3498db;
+        font-size: 17px;
+    }
 
 .footer-menu {
     background: white;
     border: 1px solid #ccc;
     list-style: none;
     width: 60px;
-    z-index: 1000; /* روی همه چیز نمایش داده شود */
+    z-index: 1000;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     width: 158px;
     text-align: center;
@@ -485,61 +405,22 @@ select option {
     direction: rtl;
 }
 
-/* هدر گروه */
-.grid-group-header {
-    display: flex;
-    align-items: center;
-    background-color: #f0f0f0; /* رنگ پس‌زمینه هدر */
-    font-weight: bold;
-    padding: 8px 12px;
-    border-bottom: 1px solid #ccc;
-    cursor: default; /* خود هدر کلیک نمی‌خورد مگر روی toggle */
-    user-select: none;
-}
-
-    /* span toggle */
-    .grid-group-header span:first-child {
-        cursor: pointer;
-        margin-right: 8px;
-        font-weight: bold;
-        color: #007bff;
-    }
-
-    /* span عنوان + جمع */
-    .grid-group-header span:last-child {
-        flex: 1; /* باقی فضا را بگیرد */
-    }
-
-    /* حالت hover روی toggle */
-    .grid-group-header span:first-child:hover {
-        color: #0056b3;
-    }
 
 
-/* وقتی گروه بسته می‌شود، ردیف‌ها مخفی */
-.grid-row.collapsed {
-    display: none;
-}
-
-
-
-
- /*پرينت استايل */
-/* پاپ‌آپ اصلی */
 #columnSelectorPopup {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: #ffffff;
-    border: 2px solid #4a90e2; /* بردر خوشگل آبی ملایم */
+    border: 2px solid #4a90e2; 
     padding: 25px 30px;
     direction: rtl;
     z-index: 99999;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.25); /* سایه زیبا */
-    border-radius: 16px; /* گرد شدن گوشه‌ها */
+    box-shadow: 0 12px 28px rgba(0,0,0,0.25); 
+    border-radius: 16px; 
     font-family: 'vazir-light', sans-serif;
     width: 350px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -571,7 +452,7 @@ select option {
     }
 
         #columnSelectorPopup label:hover {
-            background: #f0f8ff; /* افکت هاور روشن روی لیبل‌ها */
+            background: #f0f8ff; 
         }
 
     /* چک‌باکس */
@@ -596,6 +477,15 @@ select option {
         cursor: pointer;
         font-size: 14px;
         transition: background 0.2s ease, transform 0.1s ease;
+        background: linear-gradient(135deg,#007bff,#0056b3);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 20px auto 0 auto;
     }
 
     #columnSelectorPopup #confirmPrint {
@@ -609,8 +499,17 @@ select option {
         }
 
     #columnSelectorPopup #cancelPrint {
-        background-color: #ccc;
-        color: #333;
+        font-size: 14px;
+        transition: background 0.2s ease, transform 0.1s ease;
+        background: linear-gradient(135deg,#007bff,#0056b3);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 20px auto 0 auto;
     }
 
         #columnSelectorPopup #cancelPrint:hover {
@@ -618,7 +517,6 @@ select option {
             transform: translateY(-1px);
         }
 
-    /* اسکرول داخلی */
     #columnSelectorPopup::-webkit-scrollbar {
         width: 6px;
     }
@@ -629,14 +527,10 @@ select option {
     }
 
 
-
 #rowDetailsPopup div span:first-child {
     min-width: 120px;
 }
 
-
-
-/*جزييات گريد ويو*/
 /* ======= Row Detail Popup ======= */
 #rowDetailPopup {
     position: fixed;
@@ -674,7 +568,6 @@ select option {
         padding-bottom: 10px;
     }
 
-    /* هر ردیف جزئیات */
     #rowDetailPopup .detail-row {
         display: flex;
         justify-content: space-between;
@@ -694,7 +587,6 @@ select option {
             direction: ltr;
         }
 
-    /* دکمه بستن */
     #rowDetailPopup button.close-btn {
         background: linear-gradient(135deg,#007bff,#0056b3);
         color: #fff;
@@ -713,7 +605,6 @@ select option {
             background: linear-gradient(135deg,#0056b3,#003f7f);
         }
 
-    /* اسکرول بار سفارشی */
     #rowDetailPopup::-webkit-scrollbar {
         width: 8px;
     }
@@ -728,24 +619,23 @@ select option {
         }
 
 
-/*استايل دكمه ها*/
 /* قرار بده در css اصلی یا داخل <style> */
-.class-1 .full-width-btn {
-    display: block !important; /* دکمه به صورت بلوک رفتار کند */
-    width: 100%; /* پر کردن تمام عرض والد */
-    box-sizing: border-box; /* شامل padding و border در محاسبه عرض شود */
-    padding: 10px 14px; /* فضای درونی مناسب */
-    border: none; /* در صورت نیاز حذف حاشیه */
-    border-radius: 6px; /* گوشه‌های نرم */
-    background: #007bff; /* رنگ پس‌زمینه — قابل تغییر */
-    color: #fff; /* رنگ متن */
-    font-size: 14px;
+/*.class-1 .full-width-btn {
+    display: block !important;*/ /* دکمه به صورت بلوک رفتار کند */
+/*width: 100%;*/ /* پر کردن تمام عرض والد */
+/*box-sizing: border-box;*/ /* شامل padding و border در محاسبه عرض شود */
+/*padding: 10px 14px;*/ /* فضای درونی مناسب */
+/*border: none;*/ /* در صورت نیاز حذف حاشیه */
+/*border-radius: 6px;*/ /* گوشه‌های نرم */
+/*background: #007bff;*/ /* رنگ پس‌زمینه — قابل تغییر */
+/*color: #fff;*/ /* رنگ متن */
+/*font-size: 14px;
     cursor: pointer;
     text-align: center;
     transition: background .15s ease, transform .08s ease;
-}
+}*/
 
-.full-width-btn {
+#gridContainerWrapper .controls-bar .full-width-btn {
     display: block !important;
     width: 100% !important;
     box-sizing: border-box;
@@ -754,32 +644,39 @@ select option {
     max-width: 300px; /* حداکثر عرض دکمه برای مانیتورهای بزرگ */
 }
 
-    /* افکت هوور/فشار */
-    .class-2 .full-width-btn:hover {
-        background: #0069e6;
-    }
 
-    .class-2 .full-width-btn:active {
-        transform: translateY(1px);
-    }
 
-    /* اگر بخوای دکمه غیرفعال هم داشته باشی */
-    .class-2 .full-width-btn:disabled {
-        opacity: .6;
-        cursor: not-allowed;
-    }
-
-.controls-bar {
-  /*  display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: max-content;
-    box-sizing: border-box;
-    padding: 8px 12px;
-    background: linear-gradient(90deg, #fffef4, #fff);
-    border-radius: 16px;
-    border: 1px solid #bcc4ca;*/
-    direction: rtl;
+/*new css*/
+/* CSS */
+/* والد div */
+.grid-print-col {
+    width: 100%; /* تمام عرض ممکن */
+    max-width: 255px; /* محدودیت دلخواه */
+    padding: 5px;
 }
 
-   
+/* دکمه */
+.grid-print-btn {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* متن و آیکون وسط دکمه */
+    gap: 6px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    width: 100%; /* دکمه تمام عرض div را پر می‌کند */
+    box-sizing: border-box; /* padding داخل عرض حساب شود */
+}
+
+    .grid-print-btn:hover {
+        background-color: #138496;
+    }
+
+    .grid-print-btn i {
+        font-size: 20px;
+    }

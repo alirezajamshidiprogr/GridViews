@@ -4,6 +4,22 @@
 
 <link href="~/css/gridview.css" rel="stylesheet" />
 @model List<ProductSaleModel>
+<!-- پاپ‌آپ ساده فیلترها -->
+<div id="popupFilter" style="border:1px solid #ccc; padding:20px; width:300px; border-radius:8px;">
+    <h3>جستجوی پاپ‌آپ</h3>
+    <div style="margin-bottom:10px;">
+        <label for="popupRegion">Region:</label>
+        <input type="text" id="popupRegion" placeholder="مثلاً تهران" style="width:100%;">
+    </div>
+    <div style="margin-bottom:10px;">
+        <label for="popupProduct">Product:</label>
+        <input type="text" id="popupProduct" placeholder="مثلاً موبایل" style="width:100%;">
+    </div>
+    <button id="popupSearchBtn" style="padding:6px 12px; background-color:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
+        جستجو
+    </button>
+</div>
+
 
 @{
     var gridUrl = Url.Action("GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping", "Home");
@@ -14,8 +30,9 @@
 
 <link href="~/font-awsome/font-awesome.min.css" rel="stylesheet" />
 
+
 @(
-         Jamshidi_Grid("grdProduct")
+         Eorc_Grid("grdProduct")
         .Url(gridUrl)
         .Items(Model.Cast<object>().ToList())
         .EnablePaging(true)
@@ -27,18 +44,25 @@
         .EnablePrint(true)
         .EnableEditButton(true)
         @*.EnableCheckBoxColumn(false)*@
-        .EnableDeleteButton(false)
+        .EnableDeleteButton(true)
         .EnableInlineEdit(false)
         .EnableShowHiddenColumns(true)
         .Build()
 )
+
 <script src="~/js/jquery-3.7.1.js"></script>
 <script src="~/js/xlsx.full.min.js"></script>
 @*<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>*@
 @*<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>*@
 <script src="~/js/gridview.js"></script>
+@*<script src="~/js/userjs.js"></script>*@
 
 <script>
+//    document.getElementById('popupSearchBtn').addEventListener('click', function() {
+//    // فراخوانی تابع JS که داده‌ها را به اکشن ارسال می‌کند
+//    SearchGridViewByPopupData();
+//});
+
     enableRowDetailsPopup();
     //document.addEventListener('DOMContentLoaded', () => {
     //    currentPage = 1;

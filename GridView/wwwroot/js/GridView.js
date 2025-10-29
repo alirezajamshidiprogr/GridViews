@@ -51,6 +51,7 @@ function renderRows(items, columns = null) {
     const bodyContainer = container.querySelector('.grid-body');
     if (!bodyContainer) return;
 
+    debugger
     // پاک کردن ردیف‌ها و هدرهای گروه قبلی
     bodyContainer.innerHTML = '';
 
@@ -91,7 +92,7 @@ function renderRows(items, columns = null) {
 
         const gridElement = $('.dynamic-grid-container').first().attr('id');;
         const actions = document.createElement('div');
-        actions.className = 'grid-cell';
+        actions.className = 'grid-cell grid-cell-Buttons';
 
         var enableEditBuuton = document.getElementById('gridData')?.dataset.editButton === 'true';
         var enabelDeleteButton = document.getElementById('gridData')?.dataset.deleteButton === 'true';
@@ -184,18 +185,25 @@ function fetchGridData(page, size) {
 
     // حالت معمولی Paging یا Fetch از سرور
     if (urlElement && urlElement.dataset.url) {
+        const gridRequest = {
+            Page: page,
+            PageSize: size,
+            SortColumn: sortColumn,
+            SortAsc: sortAsc,
+            GroupBy: groupBy,
+            Filters: filters,
+            enablePaging: enablePaging
+        };
+
+        // 🔐 تبدیل به Base64 برای اطمینان از ASCII-safe بودن
+        const encodedGridRequest = btoa(unescape(encodeURIComponent(JSON.stringify(gridRequest))));
+
         fetch(urlElement.dataset.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                Page: page,
-                PageSize: size,
-                SortColumn: sortColumn,
-                SortAsc: sortAsc,
-                GroupBy: groupBy,
-                Filters: filters,
-                enablePaging: enablePaging
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'GridRequest': encodedGridRequest
+            },
         })
             .then(res => res.json())
             .then(data => {
@@ -207,6 +215,7 @@ function fetchGridData(page, size) {
                 window.allItemsCache = [...window.allItemsCache, ...items];
 
                 let columns = null;
+                debugger
                 if (localDataElement) {
                     const d = JSON.parse(localDataElement.textContent);
                     columns = d.columns || [];
@@ -312,6 +321,7 @@ function normalizePersianText(str) {
 
 // initialize
 function initGrid() {
+    syncWith();
     fetchGridData(currentPage, pageSize);
 
     const nextBtn = document.getElementById('nextPage');
@@ -338,6 +348,12 @@ function initGrid() {
             fetchGridData(currentPage, pageSize);
         });
     });
+}
+
+function syncWith() {
+    //var parentWith = document.querySelector('.grid-container').scrollWidth;
+    //var control = document.querySelector('.controls-bar');
+    //control.style.width = parentWith + 'px';
 }
 
 
@@ -902,6 +918,9 @@ function displayGridColumns() {
             $(`.grid-filters .grid-cell[data-column="${prop}"]`).css('display', show ? 'flex' : 'none');
         });
     });
+
+    syncWith();
+
 }
 ///////////////////////////////////////////
 
