@@ -3,7 +3,7 @@
 @using static GridView.TagHelpers.DynamicGridExtensions
 
 <link href="~/css/gridview.css" rel="stylesheet" />
-@model List<ProductSaleModel>
+@*@model List<ProductSaleModel>*@
 <!-- پاپ‌آپ ساده فیلترها -->
 @*<div id="popupFilter" style="border:1px solid #ccc; padding:20px; width:300px; border-radius:8px;">
     <h3>جستجوی پاپ‌آپ</h3>
@@ -25,63 +25,56 @@
     var gridUrl = Url.Action("GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping", "Home");
 }
 
-@*<link rel="stylesheet"   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">*@
-
-
 <link href="~/font-awsome/font-awesome.min.css" rel="stylesheet" />
-
-
+@{
+    var model = new List<ProductSaleModel>();
+}
 @(
-         Eorc_Grid("grdProduct")
+
+         Eorc_Grid<ProductSaleModel>("grdProduct")
         .Url(gridUrl)
-        .Items(Model.Cast<object>().ToList())
+        .Items(model.Cast<object>().ToList())
+        @*.Items(Model.Cast<object>().ToList())*@
         .EnablePaging(true)
         .EnableFiltering(true)
         .EnableSorting(true)
         .EnableFooter(true)
-        .EnableGrouping(false)
+        .EnableGrouping(true)
         .EnableExcelExport(true)
         .EnablePrint(true)
-        .EnableEditButton(false)
+        .EnableEditButton(true)
         .EnableDeleteButton(true)
         .EnableAdvancedFilter(true)
         @*.EnableCheckBoxColumn(false)*@
-        .EnableInlineEdit(false)
+        .EnableInlineEdit(true)
         .EnableShowHiddenColumns(true)
         .Build()
 )
-
 <script src="~/js/jquery-3.7.1.js"></script>
 <script src="~/js/xlsx.full.min.js"></script>
-@*<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>*@
-@*<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>*@
 <script src="~/js/gridview.js"></script>
-@*<script src="~/js/userjs.js"></script>*@
+<script src="~/js/userjs.js"></script>
 
 <script>
-//    document.getElementById('popupSearchBtn').addEventListener('click', function() {
-//    // فراخوانی تابع JS که داده‌ها را به اکشن ارسال می‌کند
-//    SearchGridViewByPopupData();
-//});
+   document.addEventListener('DOMContentLoaded', function() {
+    let currentPage = 1;
+    let pageSize = parseInt(document.getElementById('pageSizeSelector')?.value) || 30;
 
+    customRequestBody = {
+        searchTerm: "تبلت",
+        name: "alireza",
+    };
+
+    fetchGridData(currentPage, pageSize, customRequestBody);
     enableRowDetailsPopup();
-    //document.addEventListener('DOMContentLoaded', () => {
-    //    currentPage = 1;
-    //    pageSize = 10; // یا هر مقدار دلخواه
-    //    fetchGridData(currentPage, pageSize); // ← لود اولیه
-    //});
 
-// نمونه فراخوانی تابع با پارامتر استایل:
-window.onload = () => {
-    setTimeout(() => {
-        applyStylesToGridRows(
-            { color: 'red', 'font-size': '14px' },
-            {
-                    iD: ['1', '3'] ,
-                    Category: ['کامپیوتر', 'الکترونیک'] 
-            }
-        );
-    }, 100);
-};
+    // نمونه فراخوانی تابع با پارامتر استایل
+    // setTimeout(() => {
+    //     applyStylesToGridRows(
+    //         { color: 'red', 'font-size': '14px' },
+    //         { iD: ['1', '3'], Category: ['کامپیوتر', 'الکترونیک'] }
+    //     );
+    // }, 100);
+});
 </script>
 

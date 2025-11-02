@@ -206,17 +206,18 @@
     border-radius: 4px;
     border: none;
     cursor: pointer;
+    font-size: 13px !important;
 }
 
 .grid-container .grid-body .grid-row .grid-cell-Buttons{
     gap:5px;
 }
-.grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary {
-    background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
-    color: #fff !important;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    gap: 5px;
-}
+    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary {
+        background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
+        color: #fff !important;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        gap: 5px;
+    }
 
     .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary:hover {
         background: linear-gradient(135deg,#0056b3,#003f7f) !important;
@@ -727,7 +728,7 @@ select option {
 
 /* دکمه */
 .grid-print-btn {
-    background-color: #17a2b8;
+    background-color: #3498db;
     color: white;
     border: none;
     padding: 6px 12px;
@@ -744,14 +745,14 @@ select option {
 }
 
     .grid-print-btn:hover {
-        background-color: #138496;
+        background-color: #2571a4;
     }
 
     .grid-print-btn i {
         font-size: 20px;
     }
 
-.advanced-filter-popup {
+.advanced-filter-popup, columnSelectorPopup {
     position: fixed; /* روی صفحه ثابت باشد */
     top: 50%; /* وسط عمودی */
     left: 50%; /* وسط افقی */
@@ -770,13 +771,18 @@ select option {
     font-family: 'vazir-light', sans-serif;
 }
 
-    /* ردیف فیلدها */
-    .advanced-filter-popup .filter-row {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 8px;
-    }
 
+/* ردیف فیلدها */
+.advanced-filter-popup .filter-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+
+#advancedFilterPopup .popup-header span {
+    margin-left: 8px;
+    font-size: 22px;
+}
         /* div داخل فیلدها */
         .advanced-filter-popup .filter-row > div {
             display: flex;
@@ -822,4 +828,27 @@ select option {
     direction: rtl;
     text-align: center;
     font-family: 'vazir-light';
+}
+
+
+.grid-group-container {
+    margin-bottom: 6px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.grid-group-header {
+    background: linear-gradient(to left, #f0f4ff, #ffffff);
+    padding: 6px 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.grid-group-rows .grid-row {
+    display: flex;
+    padding: 4px 10px;
+    border-bottom: 1px solid #eee;
 }

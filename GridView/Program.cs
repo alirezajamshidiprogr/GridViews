@@ -8,6 +8,16 @@ builder.Services.AddControllersWithViews();
 // Register HttpContextAccessor so we can access HttpContext statically
 builder.Services.AddHttpContextAccessor();
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AllowSynchronousIO = true;
+});
+
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.AllowSynchronousIO = true;
+});
+
 var app = builder.Build();
 
 // Save IServiceProvider globally

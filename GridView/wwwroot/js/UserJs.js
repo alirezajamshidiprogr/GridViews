@@ -53,3 +53,16 @@
         })
         .catch(err => console.error('Error fetching popup search data:', err));
 }
+
+function InsUpd_grdProduct_Item(grid) {
+    debugger
+    var id = getGridDataCell(grid, 'ID');
+    // و ادامه كدهاي خودتون
+}
+
+function Dlt_grdProduct_Item(grid) {
+    debugger
+    var id = getGridDataCell(grid, 'SupplieR');
+        // و ادامه كدهاي خودتون
+    alert(id);
+}

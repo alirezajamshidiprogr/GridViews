@@ -4,7 +4,7 @@ let totalPage = 0; // allItems = تعداد کل رکوردها
 let sortColumn = '';
 let sortAsc = true;
 let enablePaging;
-
+var customRequestBody = {};
 // کمکی برای دسترسی امن به مقدار سلول
 function getItemValue(item, prop) {
     if (!item) return '';
@@ -140,7 +140,7 @@ function groupItems(items, groupByField) {
 }
 
 // فراخوانی داده‌ها
-function fetchGridData(page, size) {
+function fetchGridData(page, size, customBody = null) {
     enablePaging = document.getElementById('gridData')?.dataset.enablePaging === 'true';
 
     const urlElement = document.getElementById('gridData');
@@ -159,32 +159,10 @@ function fetchGridData(page, size) {
 
     const groupBy = document.getElementById('groupBySelector')?.value || '';
 
-
-    // اگر Paging فعال نیست، size = تعداد کل رکوردها
-    //if (!enablePaging && localDataElement) {
-    //    try {
-    //        const data = JSON.parse(localDataElement.textContent);
-    //        let items = applyFilters(data.items || [], filters);
-
-    //        // همه رکوردها در یک صفحه
-    //        renderRows(items);
-
-    //        // آپدیت اطلاعات صفحه‌بندی
-    //        const pageInfo = document.getElementById('pageInfo');
-    //        if (pageInfo) pageInfo.textContent = `نمایش همه ${items.length} رکورد`;
-
-    //        return; // از ادامه اجرای Paging جلوگیری کن
-    //    } catch (err) {
-    //        console.error('Error parsing local grid data:', err);
-    //        return;
-    //    }
-    //}
-
-
     if (localDataElement && groupBy) {
         let items = applyFilters(window.allItemsCache || [], filters); // تمام رکوردها
         const data = JSON.parse(localDataElement.textContent);
-        let columns = data.columns || [];
+        let columns = data.columns || []; // ✅ اصلاح: مطمئن شدن از آرایه بودن
 
         renderGroupedRows(groupItems(items, groupBy), columns);
 
@@ -203,11 +181,13 @@ function fetchGridData(page, size) {
             enablePaging: enablePaging
         };
 
-        // 🔐 تبدیل به Base64 برای اطمینان از ASCII-safe بودن
         const encodedGridRequest = btoa(unescape(encodeURIComponent(JSON.stringify(gridRequest))));
+        //  اینجا body رو از customBody می‌گیریم اگر داده شده باشه
+        const bodyToSend = customBody || {}; // اگر customBody نال بود، یک آبجکت خالی
 
         fetch(urlElement.dataset.url, {
             method: 'POST',
+            body: JSON.stringify(bodyToSend), // ✅ فقط یک بار stringify
             headers: {
                 'Content-Type': 'application/json',
                 'GridRequest': encodedGridRequest
@@ -218,18 +198,18 @@ function fetchGridData(page, size) {
                 totalPage = Math.ceil(data.totalCount / data.pageSize);
                 const items = Array.isArray(data.items) ? data.items : [];
 
-                // ✅ اینجا کل داده‌ها را در حافظه نگه می‌داریم برای گروه‌بندی بعدی
+                // اینجا کل داده‌ها را در حافظه نگه می‌داریم برای گروه‌بندی بعدی
                 window.allItemsCache = window.allItemsCache || [];
                 window.allItemsCache = [...window.allItemsCache, ...items];
 
-                let columns = null;
-                
+                let columns = []; //  مطمئن شدن از آرایه بودن
                 if (localDataElement) {
                     const d = JSON.parse(localDataElement.textContent);
                     columns = d.columns || [];
                 }
+
                 if (groupBy && items.length) {
-                    if (!columns) columns = []; // جلوگیری از خطای null
+                    if (!columns) columns = []; 
                     renderGroupedRows(groupItems(items, groupBy), columns);
                 } else {
                     renderRows(items, columns);
@@ -247,56 +227,71 @@ function renderGroupedRows(groups, columns) {
     bodyContainer.innerHTML = '';
 
     groups.forEach(g => {
-        // هدر گروه
+        // هر گروه درون یک container خودش
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'grid-group-container';
+
+        // 🔹 هدر گروه
         const groupHeader = document.createElement('div');
         groupHeader.className = 'grid-group-header';
 
-        // محاسبه جمع (مثال روی فیلد Quantity)
         const total = g.group.reduce((sum, item) => sum + Number(getItemValue(item, 'Quantity') || 0), 0);
 
-        // آیکن collapse/expand + تعداد رکورد
         const toggle = document.createElement('span');
-        toggle.textContent = ` [- ${g.group.length}] `; // پیش‌فرض باز و تعداد رکوردها
+        toggle.textContent = `[+ ${g.group.length}]`;
+        toggle.className = 'group-toggle';
         toggle.style.cursor = 'pointer';
         toggle.style.marginRight = '8px';
-
-        groupHeader.appendChild(toggle);
+        toggle.style.color = '#007bff';
+        toggle.style.fontWeight = 'bold';
 
         const title = document.createElement('span');
+        title.style.marginRight = '6px';
+        title.style.fontWeight = '500';
         title.textContent = `${g.key} (جمع: ${total.toLocaleString('fa-IR')})`;
+
+        groupHeader.appendChild(toggle);
         groupHeader.appendChild(title);
+        groupContainer.appendChild(groupHeader);
 
-        bodyContainer.appendChild(groupHeader);
+        // 🔹 ردیف‌های گروه
+        const rowsWrapper = document.createElement('div');
+        rowsWrapper.className = 'grid-group-rows';
 
-        // ردیف‌های گروه
+        rowsWrapper.style.display = 'block'; // ✅ پیش‌فرض باز باشد
+
         g.group.forEach(item => {
             const row = document.createElement('div');
             row.className = 'grid-row';
+
             columns.forEach(col => {
                 const div = document.createElement('div');
                 div.className = 'grid-cell';
                 div.setAttribute('data-cell', col.prop);
                 div.textContent = getItemValue(item, col.prop);
-                // اگر ستون مخفی است
+
                 if (!col.visible) {
                     div.style.display = 'none';
-                    div.className = 'grid-cell grid-cell-hidden';
+                    div.classList.add('grid-cell-hidden');
                 }
+
                 row.appendChild(div);
             });
-            bodyContainer.appendChild(row);
+            rowsWrapper.appendChild(row);
         });
 
-        // رفتار collapse/expand
+        groupContainer.appendChild(rowsWrapper);
+        bodyContainer.appendChild(groupContainer);
+
+        // 🔹 رویداد باز/بسته کردن
+        let isExpanded = true; // ✅ در ابتدا باز
+        toggle.textContent = `[- ${g.group.length}]`; // ✅ نمایش علامت منفی
         toggle.addEventListener('click', () => {
-            let sibling = groupHeader.nextElementSibling;
-            while (sibling && !sibling.classList.contains('grid-group-header')) {
-                sibling.style.display = sibling.style.display === 'none' ? 'flex' : 'none';
-                sibling = sibling.nextElementSibling;
-            }
-            // تغییر متن toggle با تعداد
-            const isCollapsed = toggle.textContent.startsWith(' [-');
-            toggle.textContent = isCollapsed ? ` [+ ${g.group.length}] ` : ` [- ${g.group.length}] `;
+            isExpanded = !isExpanded;
+            rowsWrapper.style.display = isExpanded ? 'block' : 'none';
+            toggle.textContent = isExpanded
+                ? `[- ${g.group.length}]`
+                : `[+ ${g.group.length}]`;
         });
     });
 }
@@ -330,7 +325,7 @@ function normalizePersianText(str) {
 // initialize
 function initGrid() {
     syncWith();
-    fetchGridData(currentPage, pageSize);
+    fetchGridData(currentPage, pageSize, customRequestBody);
 
     const nextBtn = document.getElementById('nextPage');
     const prevBtn = document.getElementById('prevPage');
@@ -338,24 +333,27 @@ function initGrid() {
     const groupBySelector = document.getElementById('groupBySelector');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    if (nextBtn) nextBtn.addEventListener('click', () => { currentPage++; fetchGridData(currentPage, pageSize); });
-    if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; fetchGridData(currentPage, pageSize); } });
-    if (pageSizeSelector) pageSizeSelector.addEventListener('change', function () { pageSize = parseInt(this.value); currentPage = 1; fetchGridData(currentPage, pageSize); });
-    if (groupBySelector) groupBySelector.addEventListener('change', () => { fetchGridData(currentPage, pageSize); });
-    if (refreshBtn) refreshBtn.addEventListener('click', () => { currentPage = 1; fetchGridData(currentPage, pageSize); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { currentPage++; fetchGridData(currentPage, pageSize, customRequestBody); });
+    if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; fetchGridData(currentPage, pageSize, customRequestBody); } });
+    if (pageSizeSelector) pageSizeSelector.addEventListener('change', function () { pageSize = parseInt(this.value); currentPage = 1; fetchGridData(currentPage, pageSize, customRequestBody); });
+    if (groupBySelector) groupBySelector.addEventListener('change', () => { fetchGridData(currentPage, pageSize, customRequestBody); });
+    if (refreshBtn) refreshBtn.addEventListener('click', () => { currentPage = 1; fetchGridData(currentPage, pageSize, customRequestBody); });
 
     document.querySelectorAll('.filter-input').forEach(input => {
-        input.addEventListener('input', () => { currentPage = 1; fetchGridData(currentPage, pageSize); });
+        input.addEventListener('input', () => { currentPage = 1; fetchGridData(currentPage, pageSize, customRequestBody); });
     });
 
-    document.querySelectorAll('.grid-header [data-column]').forEach(h => {
-        h.addEventListener('click', () => {
-            const col = h.dataset.column;
-            if (sortColumn === col) sortAsc = !sortAsc;
-            else { sortColumn = col; sortAsc = true; }
-            fetchGridData(currentPage, pageSize);
+    const enableSorting = document.getElementById('gridEnableSorting').innerText;
+    if (enableSorting.toLowerCase() == 'true') {
+        document.querySelectorAll('.grid-header [data-column]').forEach(h => {
+            h.addEventListener('click', () => {
+                const col = h.dataset.column;
+                if (sortColumn === col) sortAsc = !sortAsc;
+                else { sortColumn = col; sortAsc = true; }
+                fetchGridData(currentPage, pageSize, customRequestBody);
+            });
         });
-    });
+    }
 }
 
 function syncWith() {
@@ -440,7 +438,7 @@ document.addEventListener('click', function (e) {
 
     // ✅ فوراً fetch اجرا شود
     currentPage = 1; // برگردیم به صفحه اول
-    fetchGridData(currentPage, pageSize);
+    fetchGridData(currentPage, pageSize, customRequestBody);
 
 });
 
@@ -1072,4 +1070,17 @@ function applyStylesToGridRows(styles, condition) {
 
 
 document.addEventListener('DOMContentLoaded', initGrid);
+
+function getGridDataCell(grid, findValue) {
+    debugger
+    let row = grid.closest('.grid-row');
+    if (!row) return;
+    let hiddenCells = row.querySelectorAll('.grid-cell');
+    let cellsData = Array.from(hiddenCells).map(cell => ({
+        name: cell.getAttribute('data-cell'),
+        value: cell.textContent
+    }));
+
+    return cellsData.find(cell => cell.name.toLowerCase() === findValue.toLowerCase()).value
+}
 

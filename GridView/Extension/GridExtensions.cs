@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 public static class GridExtensions
 {
@@ -92,11 +93,8 @@ public static class GridExtensions
         return new GridRequest();
     }
 
-    public static GridResultDto<T> ToGridResult<T>(this IEnumerable<T> source)
+    public static GridResultDto<T> ToEorc_GridResultEnumarable<T>(this IEnumerable<T> source)
     {
-        // گرفتن IHttpContextAccessor از سرویس پرووایدر
-        //var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService(typeof(IHttpContextAccessor)) as IHttpContextAccessor;
-
         var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService<IHttpContextAccessor>();
         var headerValue = httpContextAccessor?.HttpContext?.Request.Headers["GridRequest"].FirstOrDefault();
         var request = headerValue.FromGridRequestHeader();
@@ -125,7 +123,7 @@ public static class GridExtensions
                 query = query.Where(x =>
                 {
                     var rawVal = prop.GetValue(x);
-                    if (rawVal == null) return false; // 🚫 اگر مقدار null بود حذفش کن
+                    if (rawVal == null) return false;
 
                     var val = rawVal.ToString().NormalizePersian();
                     var filterVal = (f.Value.Value ?? "").NormalizePersian();
@@ -193,6 +191,217 @@ public static class GridExtensions
         var items = request.enablePaging
             ? query.Skip((page - 1) * pageSize).Take(pageSize).ToList()
             : query.ToList();
+
+        return new GridResultDto<T>
+        {
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            Items = items
+        };
+    }
+    public static async Task<T> ReadRequestBodyAsync<T>(HttpRequest request) where T : new()
+    {
+        if (request == null || request.ContentLength == null || request.ContentLength == 0)
+            return new T();
+
+        request.EnableBuffering(); 
+
+        using var reader = new StreamReader(request.Body, leaveOpen: true);
+        var body = await reader.ReadToEndAsync();
+        request.Body.Position = 0;
+
+        if (string.IsNullOrWhiteSpace(body))
+            return new T();
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(body) ?? new T();
+        }
+        catch
+        {
+            return new T();
+        }
+    }
+
+    public static GridResultDto<T> ToGridResultIQuarable<T>(this IEnumerable<T> source)
+    {
+        // تبدیل به IQueryable اگر ممکن باشه
+        var queryable = source as IQueryable<T>;
+
+        var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService<IHttpContextAccessor>();
+        var headerValue = httpContextAccessor?.HttpContext?.Request.Headers["GridRequest"].FirstOrDefault();
+        var request = headerValue.FromGridRequestHeader();
+
+        var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        bool isEfQueryable = queryable != null;
+
+        // فیلترها
+        if (request.Filters != null)
+        {
+            foreach (var f in request.Filters)
+            {
+                if (f.Value == null || string.IsNullOrEmpty(f.Value.Value)) continue;
+
+                var prop = props.FirstOrDefault(p =>
+                    string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+
+                if (prop == null) continue;
+
+                // رشته
+                if (prop.PropertyType == typeof(string))
+                {
+                    if (isEfQueryable)
+                    {
+                        // EF Core translation
+                        var filterVal = f.Value.Value;
+                        switch (f.Value.Type)
+                        {
+                            case "eq":
+                                queryable = queryable.Where(x => EF.Property<string>(x, prop.Name) == filterVal);
+                                break;
+                            case "neq":
+                                queryable = queryable.Where(x => EF.Property<string>(x, prop.Name) != filterVal);
+                                break;
+                            case "contains":
+                                queryable = queryable.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"%{filterVal}%"));
+                                break;
+                            case "startswith":
+                                queryable = queryable.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"{filterVal}%"));
+                                break;
+                            case "endswith":
+                                queryable = queryable.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"%{filterVal}"));
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // IEnumerable / in-memory filtering
+                        var filterVal = f.Value.Value.NormalizePersian();
+                        switch (f.Value.Type)
+                        {
+                            case "eq":
+                                source = source.Where(x => (prop.GetValue(x)?.ToString().NormalizePersian() ?? "") == filterVal);
+                                break;
+                            case "neq":
+                                source = source.Where(x => (prop.GetValue(x)?.ToString().NormalizePersian() ?? "") != filterVal);
+                                break;
+                            case "contains":
+                                source = source.Where(x => (prop.GetValue(x)?.ToString().NormalizePersian() ?? "").Contains(filterVal));
+                                break;
+                            case "startswith":
+                                source = source.Where(x => (prop.GetValue(x)?.ToString().NormalizePersian() ?? "").StartsWith(filterVal));
+                                break;
+                            case "endswith":
+                                source = source.Where(x => (prop.GetValue(x)?.ToString().NormalizePersian() ?? "").EndsWith(filterVal));
+                                break;
+                        }
+                    }
+                }
+                // عدد
+                else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(decimal) || prop.PropertyType == typeof(double))
+                {
+                    if (decimal.TryParse(f.Value.Value, out var filterVal))
+                    {
+                        if (isEfQueryable)
+                        {
+                            switch (f.Value.Type)
+                            {
+                                case "eq":
+                                    queryable = queryable.Where(x => EF.Property<decimal>(x, prop.Name) == filterVal);
+                                    break;
+                                case "neq":
+                                    queryable = queryable.Where(x => EF.Property<decimal>(x, prop.Name) != filterVal);
+                                    break;
+                                case "gt":
+                                    queryable = queryable.Where(x => EF.Property<decimal>(x, prop.Name) > filterVal);
+                                    break;
+                                case "lt":
+                                    queryable = queryable.Where(x => EF.Property<decimal>(x, prop.Name) < filterVal);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (f.Value.Type)
+                            {
+                                case "eq":
+                                    source = source.Where(x => Convert.ToDecimal(prop.GetValue(x) ?? 0) == filterVal);
+                                    break;
+                                case "neq":
+                                    source = source.Where(x => Convert.ToDecimal(prop.GetValue(x) ?? 0) != filterVal);
+                                    break;
+                                case "gt":
+                                    source = source.Where(x => Convert.ToDecimal(prop.GetValue(x) ?? 0) > filterVal);
+                                    break;
+                                case "lt":
+                                    source = source.Where(x => Convert.ToDecimal(prop.GetValue(x) ?? 0) < filterVal);
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // سورت
+        if (!string.IsNullOrEmpty(request.SortColumn))
+        {
+            var prop = typeof(T).GetProperty(request.SortColumn);
+            if (prop != null)
+            {
+                if (isEfQueryable)
+                {
+                    queryable = request.SortAsc
+                        ? queryable.OrderBy(x => EF.Property<object>(x, prop.Name))
+                        : queryable.OrderByDescending(x => EF.Property<object>(x, prop.Name));
+                }
+                else
+                {
+                    source = request.SortAsc
+                        ? source.OrderBy(x => prop.GetValue(x))
+                        : source.OrderByDescending(x => prop.GetValue(x));
+                }
+            }
+        }
+
+        var totalCount = isEfQueryable ? queryable.Count() : source.Count();
+        int page = request.Page <= 0 ? 1 : request.Page;
+        int pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+
+        // گروه‌بندی
+        if (!string.IsNullOrEmpty(request.GroupBy))
+        {
+            var prop = typeof(T).GetProperty(request.GroupBy);
+            if (prop != null)
+            {
+                var grouped = (isEfQueryable ? queryable.AsEnumerable() : source)
+                    .GroupBy(x => prop.GetValue(x) ?? "")
+                    .Select(g => new GridGroupDto<T>
+                    {
+                        Key = g.Key?.ToString() ?? "(ناشناخته)",
+                        Count = g.Count(),
+                        Items = g.Skip((page - 1) * pageSize).Take(pageSize).ToList()
+                    })
+                    .ToList();
+
+                return new GridResultDto<T>
+                {
+                    TotalCount = totalCount,
+                    Page = page,
+                    PageSize = pageSize,
+                    GroupBy = request.GroupBy,
+                    Groups = grouped
+                };
+            }
+        }
+
+        // پیجینگ
+        var items = request.enablePaging
+            ? (isEfQueryable ? queryable.Skip((page - 1) * pageSize).Take(pageSize).ToList()
+                            : source.Skip((page - 1) * pageSize).Take(pageSize).ToList())
+            : (isEfQueryable ? queryable.ToList() : source.ToList());
 
         return new GridResultDto<T>
         {
