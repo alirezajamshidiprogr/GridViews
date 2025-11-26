@@ -124,7 +124,7 @@ namespace GridView.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetGridDataIndex_GridWith_Filter_Sort_Paging_Grouping()
+        public async Task<IActionResult> GetGridViewData()
         {
             // در صورتي كه در گريد در body مقداري  هست بخوان 
             var requestDto = await GridExtensions.ReadRequestBodyAsync<CustomGridRequestDto>(Request);
@@ -132,7 +132,6 @@ namespace GridView.Controllers
             {
                 var a = requestDto.SearchTerm;
             }
-
             // پاس پارامتر ها به ليست
             IQueryable<ProductSaleModel> list = GetBaseData();
 

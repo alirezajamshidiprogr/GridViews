@@ -7,10 +7,13 @@ using System.Text.Json;
 
 namespace GridView.TagHelpers
 {
-    public class DynamicGridBuilder
+    public class Eorc_DynamicGridBuilder
     {
         private List<object> _items = new List<object>();
         private string _url;
+        private string _editJsFunctionName;
+        private Dictionary<string, string> _editFunctionParams = new();
+        private string? _deleteJavaScriptFunction = string.Empty;
         private bool? _enablePaging;
         private bool? _enableEditButton;
         private bool? _enableDeleteButton;
@@ -23,32 +26,56 @@ namespace GridView.TagHelpers
         private bool? _enablePrint = true;
         private bool? _enableShowHiddenColumns;
         private bool? _enableAdvancedFilter;
+        private int? _pageSize = 10;
+        private List<string> _customHtmlElements = new List<string>();
 
         private Type _modelType;
         private string _gridName;
 
-        public DynamicGridBuilder ModelType<T>(string gridName)
+        public Eorc_DynamicGridBuilder ModelType<T>(string gridName)
         {
             _modelType = typeof(T);
             _gridName = gridName;  // اینجا هم نام گرید ست می‌شود
             return this;
         }
 
+        public Eorc_DynamicGridBuilder AddCustomHtml(string html)
+        {
+            _customHtmlElements.Add(html);
+            return this;
+        }
 
-        public DynamicGridBuilder Items(List<object> items) { _items = items; return this; }
-        public DynamicGridBuilder Url(string url) { _url = url; return this; }
-        public DynamicGridBuilder EnablePaging(bool val) { _enablePaging = val; return this; }
-        public DynamicGridBuilder EnableFiltering(bool val) { _enableFiltering = val; return this; }
-        public DynamicGridBuilder EnableSorting(bool val) { _enableSorting = val; return this; }
-        public DynamicGridBuilder EnableFooter(bool val) { _enableFooter = val; return this; }
-        public DynamicGridBuilder EnableGrouping(bool val) { _enableGrouping = val; return this; }
-        public DynamicGridBuilder EnableExcelExport(bool val) { _enableExcelExport = val; return this; }
-        public DynamicGridBuilder EnablePrint(bool val) { _enablePrint = val; return this; }
-        public DynamicGridBuilder EnableEditButton(bool val) { _enableEditButton = val; return this; }
-        public DynamicGridBuilder EnableDeleteButton(bool val) { _enableDeleteButton = val; return this; }
-        public DynamicGridBuilder EnableInlineEdit(bool val) { _enableInlineEdit = val; return this; }
-        public DynamicGridBuilder EnableShowHiddenColumns(bool val) { _enableShowHiddenColumns = val; return this; }
-        public DynamicGridBuilder EnableAdvancedFilter(bool val) { _enableAdvancedFilter = val; return this; }
+        public Eorc_DynamicGridBuilder Items(List<object> items) { _items = items; return this; }
+        public Eorc_DynamicGridBuilder Url(string url) { _url = url; return this; }
+        public Eorc_DynamicGridBuilder EnablePaging(bool val) { _enablePaging = val; return this; }
+        public Eorc_DynamicGridBuilder EnableFiltering(bool val) { _enableFiltering = val; return this; }
+        public Eorc_DynamicGridBuilder EnableSorting(bool val) { _enableSorting = val; return this; }
+        public Eorc_DynamicGridBuilder EnableFooter(bool val) { _enableFooter = val; return this; }
+        public Eorc_DynamicGridBuilder EnableGrouping(bool val) { _enableGrouping = val; return this; }
+        public Eorc_DynamicGridBuilder EnableExcelExport(bool val) { _enableExcelExport = val; return this; }
+        public Eorc_DynamicGridBuilder EnablePrint(bool val) { _enablePrint = val; return this; }
+        public Eorc_DynamicGridBuilder EnableEditButton(bool val) { _enableEditButton = val; return this; }
+        public Eorc_DynamicGridBuilder EnableDeleteButton(bool val) { _enableDeleteButton = val; return this; }
+        public Eorc_DynamicGridBuilder EnableInlineEdit(bool val) { _enableInlineEdit = val; return this; }
+        public Eorc_DynamicGridBuilder EnableShowHiddenColumns(bool val) { _enableShowHiddenColumns = val; return this; }
+        public Eorc_DynamicGridBuilder EnableAdvancedFilter(bool val) { _enableAdvancedFilter = val; return this; }
+        public Eorc_DynamicGridBuilder EditJavaScriptFunction(string val) { _editJsFunctionName = val; return this; }
+        public Eorc_DynamicGridBuilder EditJavaScriptFunction(string funcName, object parameters)
+        {
+            _editJsFunctionName = funcName;
+
+            if (parameters != null)
+            {
+                foreach (var prop in parameters.GetType().GetProperties())
+                {
+                    _editFunctionParams[prop.Name] = prop.GetValue(parameters)?.ToString() ?? "";
+                }
+            }
+
+            return this;
+        }
+        public Eorc_DynamicGridBuilder DeleteJavaScriptFunction(string val) { _deleteJavaScriptFunction = val; return this; }
+        public Eorc_DynamicGridBuilder PageSize(int val) { _pageSize = val; return this; }
 
         public IHtmlContent Build()
         {
@@ -86,6 +113,7 @@ namespace GridView.TagHelpers
             if (_enablePrint == null) htmlError += "<div class='alert alert-danger'>گزینه _enablePrint مشخص نشده است!</div>";
             if (_enableShowHiddenColumns == null) htmlError += "<div class='alert alert-danger'>گزینه _enableShowHiddenColumns مشخص نشده است!</div>";
             if (_enableAdvancedFilter == null) htmlError += "<div class='alert alert-danger'>گزینه _enableAdvancedFilter مشخص نشده است!</div>";
+            if (_pageSize % 5 != 0) htmlError += "<div class='alert alert-danger'>Page Size بايد مضربي از 5 باشد </div>";
 
             // 🟥 اگر هر خطایی وجود داشت — خروج
             if (htmlError.Length > 0)
@@ -96,13 +124,28 @@ namespace GridView.TagHelpers
             // ✅ از اینجا به بعد کد اصلی گرید بدون تغییر ادامه دارد
             html = $"<div id='{_gridName}' class='dynamic-grid-container'>";
             html += $@"
-                    <div id='gridData'
-                         data-url='{_url ?? ""}'
-                         data-enable-paging='{_enablePaging.ToString().ToLower()}'
-                         data-edit-button='{_enableEditButton.ToString().ToLower()}'
-                         data-delete-button='{_enableDeleteButton.ToString().ToLower()}'
-                         style='display:none;'>
-                    </div>";
+            <div id='gridData'
+                 data-url='{_url ?? ""}'
+                 data-enable-paging='{_enablePaging.ToString().ToLower()}'
+                 data-edit-button='{(_enableEditButton ?? false).ToString().ToLower()}'
+                 data-delete-button='{(_enableDeleteButton ?? false).ToString().ToLower()}'
+                 data-edit-function-name='{_editJsFunctionName}'
+                 data-delete-function='{_deleteJavaScriptFunction}'
+                 data-page-size='{_pageSize}'
+            style='display:none;'";
+
+            // اضافه کردن پارامترهای تابع Edit
+            if (_editFunctionParams != null)
+            {
+                foreach (var kv in _editFunctionParams)
+                {
+                    html += $" data-edit-param-{kv.Key}='{kv.Value}'";
+                }
+            }
+
+            html += "></div>";
+
+
 
             html += "<div id='gridContainerWrapper'>";
             html += "<div class='row controls controls-bar'>";
@@ -112,12 +155,12 @@ namespace GridView.TagHelpers
                 html += $"<div class='col-1' id='grd-pageSizeSelector'>" +
                    $"<label>تعداد در هر صفحه:" +
                    $"<select id='pageSizeSelector'>" +
-                   $"<option value='5'>5</option>" +
-                   $"<option value='10' selected>10</option>" +
-                   $"<option value='15'>15</option>" +
-                   $"<option value='20'>20</option>" +
-                   $"<option value='25'>25</option>" +
-                   $"<option value='30'>30</option>" +
+                   $"<option value='5' {(_pageSize == 5 ? "selected" : "")}>5</option>" +
+                   $"<option value='10' {(_pageSize == 10 ? "selected" : "")}>10</option>" +
+                   $"<option value='15' {(_pageSize == 15 ? "selected" : "")}>15</option>" +
+                   $"<option value='20' {(_pageSize == 20 ? "selected" : "")}>20</option>" +
+                   $"<option value='25' {(_pageSize == 25 ? "selected" : "")}>25</option>" +
+                   $"<option value='30' {(_pageSize == 30 ? "selected" : "")}>30</option>" +
                    $"</select>" +
                    $"</label></div>";
             }
@@ -172,6 +215,13 @@ namespace GridView.TagHelpers
             if (_enableAdvancedFilter.HasValue && _enableAdvancedFilter.Value)
             {
                 html += "<div class='grid-print-col'> <button id='displayGridColumns' onclick='displayAdvancedFilter()' class='grid-print-btn'>فيلتر پيشرفته<i style='margin-right: 6px;font-size: 20px;' class='fa fa-search'></i></button></div>";
+            }
+            if (_customHtmlElements.Any())
+            {
+                foreach (var customHtml in _customHtmlElements)
+                {
+                    html += $"<div class='grid-print-col'>{customHtml}</div>";
+                }
             }
 
             html += "</div>"; // controls
@@ -406,10 +456,19 @@ namespace GridView.TagHelpers
     public static class DynamicGridExtensions
     {
         // اگر میخوای مستقیماً با مدل و نام گرید صدا بزنی
-        public static DynamicGridBuilder Eorc_Grid<T>(string gridName)
+        public static Eorc_DynamicGridBuilder Eorc_Grid<T>(string gridName, string customHtml = null)
         {
-            return new DynamicGridBuilder()
-                   .ModelType<T>(gridName);
+            var builder = new Eorc_DynamicGridBuilder()
+                              .ModelType<T>(gridName);
+
+            if (!string.IsNullOrWhiteSpace(customHtml))
+            {
+                builder.AddCustomHtml(customHtml);
+            }
+
+            return builder;
         }
+
+
     }
 }

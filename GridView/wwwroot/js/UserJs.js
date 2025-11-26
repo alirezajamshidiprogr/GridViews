@@ -61,8 +61,9 @@ function InsUpd_grdProduct_Item(grid) {
 }
 
 function Dlt_grdProduct_Item(grid) {
-    debugger
-    var id = getGridDataCell(grid, 'SupplieR');
+    var SupplieR = getGridDataCell(grid, 'SupplieR');
+
+
         // و ادامه كدهاي خودتون
-    alert(id);
+    alert(SupplieR);
 }

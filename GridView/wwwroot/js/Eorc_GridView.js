@@ -51,7 +51,7 @@ function renderRows(items, columns = null) {
     const bodyContainer = container.querySelector('.grid-body');
     if (!bodyContainer) return;
 
-    
+
     // پاک کردن ردیف‌ها و هدرهای گروه قبلی
     bodyContainer.innerHTML = '';
 
@@ -92,23 +92,38 @@ function renderRows(items, columns = null) {
 
         const gridElement = $('.dynamic-grid-container').first().attr('id');;
 
+        const grid = document.getElementById('gridData');
 
         // اين كد در زماني اجرا مي شود كه يكي از دكمه هاي ويرايش يا حذف فعال باشد 
-        var enableEditBuuton = document.getElementById('gridData')?.dataset.editButton === 'true';
-        var enabelDeleteButton = document.getElementById('gridData')?.dataset.deleteButton === 'true';
+        var enableEditBuuton = grid?.dataset.editButton === 'true';
+        var enabelDeleteButton = grid?.dataset.deleteButton === 'true';
 
         if (enableEditBuuton || enabelDeleteButton) {
             const actions = document.createElement('div');
             actions.className = 'grid-cell grid-cell-Buttons';
 
 
+            debugger
+
             // اگر دكمه ويرايش فعال است
             if (enableEditBuuton) {
-                actions.innerHTML = `<button class="btn primary edit-btn" onclick='InsUpd_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 20h9'></path><path d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'></path></svg>ويرايش</button>`;
+                let insEditFunction;
+                if (grid?.dataset.editFunction)
+                    insEditFunction = grid.dataset.editFunction;
+                else
+                    insEditFunction = `InsUpd_${gridElement}_Item(this)`;
+
+                actions.innerHTML = `<button class="btn primary edit-btn" onclick='${insEditFunction}'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 20h9'></path><path d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'></path></svg>ويرايش</button>`;
             }
             // اگر دكمه حذف فعال است
             if (enabelDeleteButton) {
-                actions.innerHTML += `<button class="btn danger delete-btn" onclick='Dlt_${gridElement}_Item(this)'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'></path><path d='M10 11v6'></path><path d='M14 11v6'></path></svg> حذف</button>`;
+                let deleteFunction;
+                if (grid?.dataset.deleteFunction)
+                    deleteFunction = grid.dataset.deleteFunction;
+                else
+                    deleteFunction = `Dlt_${gridElement}_Item(this)`;
+
+                actions.innerHTML += `<button class="btn danger delete-btn" onclick='${deleteFunction}'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'></path><path d='M10 11v6'></path><path d='M14 11v6'></path></svg> حذف</button>`;
             }
 
             row.appendChild(actions);
@@ -209,7 +224,7 @@ function fetchGridData(page, size, customBody = null) {
                 }
 
                 if (groupBy && items.length) {
-                    if (!columns) columns = []; 
+                    if (!columns) columns = [];
                     renderGroupedRows(groupItems(items, groupBy), columns);
                 } else {
                     renderRows(items, columns);
@@ -324,6 +339,9 @@ function normalizePersianText(str) {
 
 // initialize
 function initGrid() {
+    const grid = document.getElementById('gridData');
+    pageSize = parseInt(grid.dataset.pageSize);
+
     syncWith();
     fetchGridData(currentPage, pageSize, customRequestBody);
 
@@ -451,23 +469,20 @@ document.addEventListener('click', e => {
 
 
 // عمليات فوتر گريد جمع ، ميانگين و ...
-
 document.querySelectorAll('.grid-cell[data-footer]').forEach(cell => {
     const input = cell.querySelector('.footer-input');
     const icon = cell.querySelector('.footer-icon');
     const menu = cell.querySelector('.footer-menu');
+    const gridWrapper = document.getElementById("gridContainerWrapper");
 
-    if (cell.dataset.footer == 'Actions')
-        return;
-
+    if (!icon || !menu || !gridWrapper) return;
+    if (cell.dataset.footer === 'Actions') return;
 
     // مقدار پیش‌فرض calcState
     if (!cell.dataset.calcState) {
         cell.dataset.calcState = 'sum';
         input.value = `جمع = 0`;
     }
-
-    if (!icon || !menu) return;
 
     // باز کردن منو
     icon.addEventListener('click', e => {
@@ -476,30 +491,61 @@ document.querySelectorAll('.grid-cell[data-footer]').forEach(cell => {
         // حذف منوهای باز قبلی
         document.querySelectorAll('.footer-menu.clone').forEach(m => m.remove());
 
+        // ساخت clone از منو
         const clone = menu.cloneNode(true);
         clone.classList.add('clone');
-        document.body.appendChild(clone);
-        
-        const rect = icon.getBoundingClientRect();
-        clone.style.position = 'absolute';
-        // باز شدن منو بالای آیکون
-        const offset = 15; // فاصله اضافه بالاتر
-
-        clone.style.top = (rect.top + window.scrollY - clone.offsetHeight - offset) + 'px';
-        clone.style.left = (rect.left + window.scrollX) + 'px';
+        clone.style.position = 'fixed';
         clone.style.display = 'block';
-        clone.style.zIndex = 9999;
+        clone.style.zIndex = 10000;
+        clone.style.minWidth = '150px';
+        clone.style.boxShadow = '0 4px 10px rgba(0,0,0,0.15)';
+        clone.style.borderRadius = '8px';
+        clone.style.background = '#fff';
+        clone.style.padding = '6px 0';
+        clone.style.listStyle = 'none';
+        clone.style.cursor = 'pointer';
+        clone.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+        clone.style.opacity = '0';
+        clone.style.transform = 'translateY(5px)';
+        document.body.appendChild(clone);
 
-        // بستن وقتی بیرون کلیک شد
+        // محاسبه موقعیت دقیق (بالای آیکون و داخل دید)
+        const wrapperRect = gridWrapper.getBoundingClientRect();
+        const iconRect = icon.getBoundingClientRect();
+        const popupRect = clone.getBoundingClientRect();
+
+        // جهت RTL و باز شدن بالای آیکون
+        const offset = 10; // فاصله از آیکون
+        let left = iconRect.right - popupRect.width; // راست به چپ
+        let top = iconRect.top - popupRect.height - offset; // بالای آیکون
+
+        // جلوگیری از خروج از چپ یا راست
+        if (left < wrapperRect.left + 4) left = wrapperRect.left + 4;
+        if (left + popupRect.width > window.innerWidth - 4)
+            left = window.innerWidth - popupRect.width - 4;
+
+        // جلوگیری از خروج از بالا
+        if (top < 4) top = iconRect.bottom + offset;
+
+        clone.style.left = `${left}px`;
+        clone.style.top = `${top}px`;
+
+        // افکت ظاهر شدن
+        requestAnimationFrame(() => {
+            clone.style.opacity = '1';
+            clone.style.transform = 'translateY(0)';
+        });
+
+        // بستن هنگام کلیک بیرون
         const closeMenu = ev => {
             if (!clone.contains(ev.target) && ev.target !== icon) {
                 clone.remove();
                 document.removeEventListener('click', closeMenu);
             }
         };
-        document.addEventListener('click', closeMenu);
+        setTimeout(() => document.addEventListener('click', closeMenu), 100);
 
-        // انتخاب گزینه برای همین footer
+        // انتخاب گزینه‌ها
         clone.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', e => {
                 e.stopPropagation();
@@ -507,10 +553,12 @@ document.querySelectorAll('.grid-cell[data-footer]').forEach(cell => {
                 cell.dataset.calcState = calcType;
 
                 updateGridFooters(calcType, cell);
-
                 clone.remove();
             });
         });
+
+        // بستن هنگام scroll در gridWrapper
+        gridWrapper.addEventListener('scroll', () => clone.remove(), { once: true });
     });
 });
 
@@ -733,15 +781,13 @@ function exportGridToExcelXlsx() {
 
     var data = [];
 
-    // بررسی اینکه آیا گروه‌بندی فعال است؟
+    // بررسی گروه‌بندی
     var groupBy = $('#groupBySelector').val();
     if (groupBy && $('.grid-group-header').length) {
-        // استخراج گروه‌ها از DOM
         $('.grid-group-header').each(function () {
             var groupTitle = $(this).text().trim();
-            data.push([groupTitle]); // ردیف عنوان گروه
+            data.push([groupTitle]); // عنوان گروه
 
-            // ردیف‌های گروه
             var groupRows = [];
             var next = $(this).next();
             while (next.length && !next.hasClass('grid-group-header')) {
@@ -754,17 +800,11 @@ function exportGridToExcelXlsx() {
                 next = next.next();
             }
 
-            // اضافه کردن هدر فقط برای اولین گروه
-            if (data.length === 1) data.push(headers);
-
-            // اضافه کردن ردیف‌های گروه به داده‌ها
+            if (data.length === 1) data.push(headers); // فقط برای اولین گروه
             groupRows.forEach(r => data.push(r));
-
-            // ردیف خالی برای فاصله بین گروه‌ها
-            data.push([]);
+            data.push([]); // فاصله بین گروه‌ها
         });
     } else {
-        // بدون گروه‌بندی
         data.push(headers);
         rows.each(function () {
             var row = [];
@@ -780,7 +820,9 @@ function exportGridToExcelXlsx() {
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(data);
 
-    // راست‌به‌چپ و استایل‌دهی
+    ws['!cols'] = headers.map(() => ({ wch: 20 })); // عرض ستون‌ها
+
+    // تنظیم فونت و رنگ‌ها
     var range = XLSX.utils.decode_range(ws['!ref']);
     for (var R = range.s.r; R <= range.e.r; ++R) {
         for (var C = range.s.c; C <= range.e.c; ++C) {
@@ -789,34 +831,33 @@ function exportGridToExcelXlsx() {
             if (!cell) continue;
             if (!cell.s) cell.s = {};
 
-            cell.s.alignment = { horizontal: "right", vertical: "center" };
-            cell.s.font = { name: "B Nazanin", sz: 12 };
+            // فونت B Nazanin و راست‌چین
+            cell.s.font = { name: "B Nazanin", sz: 12, color: { rgb: "000000" } };
+            cell.s.alignment = { horizontal: "right", vertical: "center", readingOrder: 2 };
 
-            // اگر این ردیف گروه است، رنگ پس‌زمینه متفاوت
-            if (data[R].length === 1) {
-                cell.s.fill = { patternType: "solid", fgColor: { rgb: "FFF9C4" } }; // زرد روشن
+            // رنگ هدر آبی
+            if (R === 0) {
+                cell.s.fill = { patternType: "solid", fgColor: { rgb: "1976D2" } }; // آبی
+                cell.s.font.color = { rgb: "FFFFFF" }; // متن سفید روی هدر
                 cell.s.font.bold = true;
-            } else if (R === 1 && !groupBy) {
-                cell.s.fill = { patternType: "solid", fgColor: { rgb: "E0E0E0" } }; // هدر
-                cell.s.font.bold = true;
-            } else {
+                cell.s.alignment.horizontal = "center";
+            }
+            // رنگ سلول‌ها ملایم
+            else {
+                cell.s.fill = { patternType: "solid", fgColor: { rgb: "E3F2FD" } }; // رنگ آبی خیلی روشن
                 cell.s.border = {
-                    top: { style: "thin", color: { rgb: "000000" } },
-                    bottom: { style: "thin", color: { rgb: "000000" } },
-                    left: { style: "thin", color: { rgb: "000000" } },
-                    right: { style: "thin", color: { rgb: "000000" } }
+                    top: { style: "thin", color: { rgb: "B0B0B0" } },
+                    bottom: { style: "thin", color: { rgb: "B0B0B0" } },
+                    left: { style: "thin", color: { rgb: "B0B0B0" } },
+                    right: { style: "thin", color: { rgb: "B0B0B0" } }
                 };
             }
         }
     }
 
-    ws['!cols'] = headers.map(() => ({ wch: 20 }));
     XLSX.utils.book_append_sheet(wb, ws, "گزارش");
-
-    // فایل خروجی
-    XLSX.writeFile(wb, "گزارش_گرید.xlsx");
+    XLSX.writeFile(wb, "گزارش_گرید.xlsx", { bookSST: true, cellStyles: true });
 }
-
 
 //
 function enableRowDetailsPopup() {
@@ -889,7 +930,7 @@ function displayGridColumns() {
 
     columns.each(function (i) {
         const $this = $(this);
-        
+
         // فقط ستون‌هایی که کلاس grid-cell-hidden ندارند
         if ($this.hasClass('grid-cell-hidden')) return; // رد کردن ستون مخفی دائمی
 

@@ -691,21 +691,6 @@ select option {
 
 
 /* قرار بده در css اصلی یا داخل <style> */
-/*.class-1 .full-width-btn {
-    display: block !important;*/ /* دکمه به صورت بلوک رفتار کند */
-/*width: 100%;*/ /* پر کردن تمام عرض والد */
-/*box-sizing: border-box;*/ /* شامل padding و border در محاسبه عرض شود */
-/*padding: 10px 14px;*/ /* فضای درونی مناسب */
-/*border: none;*/ /* در صورت نیاز حذف حاشیه */
-/*border-radius: 6px;*/ /* گوشه‌های نرم */
-/*background: #007bff;*/ /* رنگ پس‌زمینه — قابل تغییر */
-/*color: #fff;*/ /* رنگ متن */
-/*font-size: 14px;
-    cursor: pointer;
-    text-align: center;
-    transition: background .15s ease, transform .08s ease;
-}*/
-
 #gridContainerWrapper .controls-bar .full-width-btn {
     display: block !important;
     width: 100% !important;
@@ -831,23 +816,24 @@ select option {
 }
 
 
-.grid-group-container {
+.grid-container .grid-group-container {
     margin-bottom: 6px;
     border: 1px solid #eee;
     border-radius: 6px;
     overflow: hidden;
 }
 
-.grid-group-header {
+#gridContainerWrapper .grid-container .grid-group-header {
     background: linear-gradient(to left, #f0f4ff, #ffffff);
     padding: 6px 10px;
     font-weight: bold;
     display: flex;
     align-items: center;
     border-bottom: 1px solid #ddd;
+    font-size: 1.2em;
 }
 
-.grid-group-rows .grid-row {
+.grid-container .grid-group-container .grid-group-rows .grid-row {
     display: flex;
     padding: 4px 10px;
     border-bottom: 1px solid #eee;
