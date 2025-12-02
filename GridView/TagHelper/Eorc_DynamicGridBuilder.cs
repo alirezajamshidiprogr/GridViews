@@ -23,10 +23,13 @@ namespace GridView.TagHelpers
         private bool? _enableFooter;
         private bool? _enableGrouping;
         private bool? _enableExcelExport;
+        private bool? _enablePdfExport;
         private bool? _enablePrint = true;
         private bool? _enableShowHiddenColumns;
         private bool? _enableAdvancedFilter;
         private int? _pageSize = 10;
+        private bool _enableLazyLoading;
+
         private List<string> _customHtmlElements = new List<string>();
 
         private Type _modelType;
@@ -53,6 +56,7 @@ namespace GridView.TagHelpers
         public Eorc_DynamicGridBuilder EnableFooter(bool val) { _enableFooter = val; return this; }
         public Eorc_DynamicGridBuilder EnableGrouping(bool val) { _enableGrouping = val; return this; }
         public Eorc_DynamicGridBuilder EnableExcelExport(bool val) { _enableExcelExport = val; return this; }
+        public Eorc_DynamicGridBuilder EnablePDFExport(bool val) { _enablePdfExport = val; return this; }
         public Eorc_DynamicGridBuilder EnablePrint(bool val) { _enablePrint = val; return this; }
         public Eorc_DynamicGridBuilder EnableEditButton(bool val) { _enableEditButton = val; return this; }
         public Eorc_DynamicGridBuilder EnableDeleteButton(bool val) { _enableDeleteButton = val; return this; }
@@ -60,6 +64,7 @@ namespace GridView.TagHelpers
         public Eorc_DynamicGridBuilder EnableShowHiddenColumns(bool val) { _enableShowHiddenColumns = val; return this; }
         public Eorc_DynamicGridBuilder EnableAdvancedFilter(bool val) { _enableAdvancedFilter = val; return this; }
         public Eorc_DynamicGridBuilder EditJavaScriptFunction(string val) { _editJsFunctionName = val; return this; }
+        public Eorc_DynamicGridBuilder EnableLazyLoading(bool val) { _enableLazyLoading = val; return this; }
         public Eorc_DynamicGridBuilder EditJavaScriptFunction(string funcName, object parameters)
         {
             _editJsFunctionName = funcName;
@@ -110,6 +115,7 @@ namespace GridView.TagHelpers
             if (_enableFooter == null) htmlError += "<div class='alert alert-danger'>گزینه _enableFooter مشخص نشده است!</div>";
             if (_enableGrouping == null) htmlError += "<div class='alert alert-danger'>گزینه _enableGrouping مشخص نشده است!</div>";
             if (_enableExcelExport == null) htmlError += "<div class='alert alert-danger'>گزینه _enableExcelExport مشخص نشده است!</div>";
+            if (_enablePdfExport == null) htmlError += "<div class='alert alert-danger'>گزینه _enablePdfExport مشخص نشده است!</div>";
             if (_enablePrint == null) htmlError += "<div class='alert alert-danger'>گزینه _enablePrint مشخص نشده است!</div>";
             if (_enableShowHiddenColumns == null) htmlError += "<div class='alert alert-danger'>گزینه _enableShowHiddenColumns مشخص نشده است!</div>";
             if (_enableAdvancedFilter == null) htmlError += "<div class='alert alert-danger'>گزینه _enableAdvancedFilter مشخص نشده است!</div>";
@@ -131,6 +137,7 @@ namespace GridView.TagHelpers
                  data-delete-button='{(_enableDeleteButton ?? false).ToString().ToLower()}'
                  data-edit-function-name='{_editJsFunctionName}'
                  data-delete-function='{_deleteJavaScriptFunction}'
+                 data-lazy-loading='{(_enableLazyLoading).ToString().ToLower()}'
                  data-page-size='{_pageSize}'
             style='display:none;'";
 
@@ -150,7 +157,7 @@ namespace GridView.TagHelpers
             html += "<div id='gridContainerWrapper'>";
             html += "<div class='row controls controls-bar'>";
 
-            if (_enablePaging.HasValue && _enablePaging.Value)
+            if (!_enableLazyLoading && (_enablePaging.HasValue && _enablePaging.Value))
             {
                 html += $"<div class='col-1' id='grd-pageSizeSelector'>" +
                    $"<label>تعداد در هر صفحه:" +
@@ -166,7 +173,7 @@ namespace GridView.TagHelpers
             }
 
 
-            if (_enableGrouping.HasValue && _enableGrouping.Value)
+            if (!_enableLazyLoading && (_enableGrouping.HasValue && _enableGrouping.Value))
             {
                 //  گرفتن نوع داده‌ها — اگر آیتمی وجود ندارد از ModelType استفاده می‌کنیم
                 var type = (_items != null && _items.Any())
@@ -200,27 +207,31 @@ namespace GridView.TagHelpers
                 }
             }
 
+            if (_enablePdfExport.HasValue && _enablePdfExport.Value)
+            {
+                html += $"<div class='col-md-1 grid-buttons-col'><button id='PdfGridBtn' onclick='exportGridToPdf(\"{_gridName}\")' class='grid-print-btn'> خروجي pdf <i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-pdf-o'></i> </button></div>";
+            }
             if (_enableExcelExport.HasValue && _enableExcelExport.Value)
             {
-                html += "<div class='grid-print-col'><button id='ExcelGridBtn' onclick='exportGridToExcelXlsx()' class='grid-print-btn'> خروجي اكسل<i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-excel-o'></i> </button></div>";
+                html += $"<div class='col-md-1 grid-buttons-col'><button id='ExcelGridBtn' onclick='exportGridToExcelXlsx(\"{_gridName}\")' class='grid-print-btn'> خروجي اكسل<i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-excel-o'></i> </button></div>";
             }
             if (_enablePrint.HasValue && _enablePrint.Value)
             {
-                html += "<div class='grid-print-col'> <button id='printGridBtn' onclick='printDynamicGrid()' class='grid-print-btn'>پرینت  <i style='margin-right: 6px;font-size: 20px;' class='fa fa-print'></i></button></div>";
+                html += $"<div class='col-md-1 grid-buttons-col'> <button id='printGridBtn' onclick='printDynamicGrid(\"{_gridName}\")' class='grid-print-btn'>پرینت  <i style='margin-right: 6px;font-size: 20px;' class='fa fa-print'></i></button></div>";
             }
             if (_enableShowHiddenColumns.HasValue && _enableShowHiddenColumns.Value)
             {
-                html += "<div class='grid-print-col'> <button id='displayGridColumns' onclick='displayGridColumns()' class='grid-print-btn'>نمايش ستون<i style='margin-right: 6px;font-size: 20px;' class='fa fa-columns'></i></button></div>";
+                html += $"<div class='col-md-1 grid-buttons-col'> <button id='displayGridColumns' onclick='displayGridColumns(\"{_gridName}\")' class='grid-print-btn'>نمايش ستون<i style='margin-right: 6px;font-size: 20px;' class='fa fa-columns'></i></button></div>";
             }
             if (_enableAdvancedFilter.HasValue && _enableAdvancedFilter.Value)
             {
-                html += "<div class='grid-print-col'> <button id='displayGridColumns' onclick='displayAdvancedFilter()' class='grid-print-btn'>فيلتر پيشرفته<i style='margin-right: 6px;font-size: 20px;' class='fa fa-search'></i></button></div>";
+                html += $"<div class='col-md-1 grid-buttons-col'> <button id='displayGridColumns' onclick='displayAdvancedFilter(\"{_gridName}\")' class='grid-print-btn'>فيلتر پيشرفته<i style='margin-right: 6px;font-size: 20px;' class='fa fa-search'></i></button></div>";
             }
             if (_customHtmlElements.Any())
             {
                 foreach (var customHtml in _customHtmlElements)
                 {
-                    html += $"<div class='grid-print-col'>{customHtml}</div>";
+                    html += $"<div class='col-md-1 grid-buttons-col'>{customHtml}</div>";
                 }
             }
 
@@ -252,8 +263,8 @@ namespace GridView.TagHelpers
             // Advanced Filter (اگر فعال است)
             if (_enableAdvancedFilter.HasValue && _enableAdvancedFilter.Value)
             {
-                html += @"
-    <div id='advancedFilterPopup' class='advanced-filter-popup' style='display:none;position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:600px;max-width:90vw;min-width:400px;max-height:80vh;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25);overflow-y:auto;padding:0;z-index:10000;'>
+                html += @$"
+        <div id='advancedFilterPopup_{_gridName}' class='advanced-filter-popup' style='display:none;position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:600px;max-width:90vw;min-width:400px;max-height:80vh;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25);overflow-y:auto;padding:0;z-index:10000;'>
         <div class='popup-header' style='background:#3498db;color:#fff;font-weight:bold;padding:12px 16px;border-top-left-radius:8px;border-top-right-radius:8px;font-size:16px;'>
             فیلتر پیشرفته
             <span onclick='closeAdvancedFilter()' style='float:right;cursor:pointer;font-weight:bold;'>×</span>
@@ -274,17 +285,25 @@ namespace GridView.TagHelpers
         </div>
         <hr style='margin:6px 0;' />";
                 }
-                html += @"
+                html += @$"
         </div> <!-- پایان popup-body -->
         <div class='popup-footer' style='text-align:right;padding:12px;border-top:1px solid #ccc;background:#f9f9f9;border-bottom-left-radius:8px;border-bottom-right-radius:8px;'>
             <button type='button' onclick='applyAdvancedFilter()' class='btn btn-primary' style='margin-left:8px;'>اعمال فیلتر</button>
-            <button type='button' onclick='closeAdvancedFilter()' class='btn btn-secondary'>بستن</button>
+           <button type='button' onclick='closeAdvancedFilter(""{_gridName}"")' class='btn btn-secondary'>بستن</button>
         </div>
     </div>";
             }
 
             // Header
             html += "<div class='grid-header'>";
+
+            // ستون عملیات اول
+            if ((_enableEditButton == true) || (_enableDeleteButton == true))
+            {
+                html += "<div class='grid-cell grid-cell-Actions'>عملیات</div>";
+            }
+
+            // سپس بقیه ستون‌ها
             foreach (var col in columnsMeta)
             {
                 var style = col.Attr.Visible ? "" : "style='display:none;'";
@@ -293,24 +312,27 @@ namespace GridView.TagHelpers
                 html += $"<div class='{className}' {style} data-column='{col.Prop.Name}'>{sortIcons} {col.Attr.Header}</div>";
             }
 
-            // ستون عملیات
-            if ((_enableEditButton == true) || (_enableDeleteButton == true))
-            {
-                html += "<div class='grid-cell'>عملیات</div>";
-            }
+           
             html += "</div>";
 
             // Filters
             if (_enableFiltering == true)
             {
                 html += "<div class='grid-filters'>";
+
+                // اگر ستون عملیات اول است، یک div خالی برایش اضافه کنید تا جا پر شود
+                if ((_enableEditButton == true) || (_enableDeleteButton == true))
+                {
+                    html += "<div class='grid-cell grid-cell-Buttons' style='pointer-events:none;'></div>";
+                }
+
                 foreach (var col in columnsMeta.Where(c => c.Attr.EnableFiltering))
                 {
                     var style = col.Attr.Visible ? "" : "style='display:none;'";
                     var className = col.Attr.Visible ? "grid-cell" : "grid-cell grid-cell-hidden";
 
                     html += $"<div class='{className}' {style} data-column='{col.Prop.Name}' style='position:relative;'>" +
-                            $"<input type='text' class='filter-input' data-prop='{col.Prop.Name}' placeholder='جستجو {col.Attr.Header}' />" +
+                            $"<input type='text' class='filter-input' data-prop='{col.Prop.Name}' placeholder='جستجو' />" +
                             $"<span class='filter-icon'>&#128269;</span>" +
                             $"<ul class='filter-menu'>" +
                             $"<li data-type='eq'  data-icon='='> =مساوي با </li>" +
@@ -333,13 +355,8 @@ namespace GridView.TagHelpers
                 foreach (var item in _items)
                 {
                     html += "<div class='grid-row'>";
-                    foreach (var col in columnsMeta)
-                    {
-                        var value = System.Net.WebUtility.HtmlEncode(col.Prop.GetValue(item)?.ToString() ?? "");
-                        var style = col.Attr.Visible ? "" : "style='display:none;'";
-                        html += $"<div class='grid-cell' data-cell='{col.Prop.Name}' {style}>{value}</div>";
-                    }
 
+                    // ستون عملیات اول
                     if ((_enableEditButton == true) || (_enableDeleteButton == true))
                     {
                         html += "<div class='grid-cell grid-cell-Buttons'>";
@@ -347,6 +364,14 @@ namespace GridView.TagHelpers
                         if (_enableDeleteButton == true) html += "<button class='btn danger delete-btn'>حذف</button>";
                         html += "</div>";
                     }
+
+                    foreach (var col in columnsMeta)
+                    {
+                        var value = System.Net.WebUtility.HtmlEncode(col.Prop.GetValue(item)?.ToString() ?? "");
+                        var style = col.Attr.Visible ? "" : "style='display:none;'";
+                        html += $"<div class='grid-cell' data-cell='{col.Prop.Name}' {style}>{value}</div>";
+                    }
+
                     html += "</div>";
                 }
             }
@@ -371,6 +396,13 @@ namespace GridView.TagHelpers
             if (_enableFooter == true)
             {
                 html += "<div class='grid-footer'><div class='grid-row footer-row'>";
+
+                // ستون عملیات اول
+                if ((_enableEditButton == true) || (_enableDeleteButton == true))
+                {
+                    html += "<div class='grid-cell grid-cell-Buttons'></div>";
+                }
+
                 foreach (var col in columnsMeta)
                 {
                     var style = col.Attr.Visible ? "" : "style='display:none;'";
@@ -400,10 +432,7 @@ namespace GridView.TagHelpers
                                 "</ul>" : "") +
                             "</div>";
                 }
-                if ((_enableEditButton == true) || (_enableDeleteButton == true))
-                {
-                    html += "<div class='grid-cell' data-footer='Actions'><input type='text' class='footer-input' value='0' readonly /></div>";
-                }
+
                 html += "</div></div>";
             }
 
@@ -438,7 +467,7 @@ namespace GridView.TagHelpers
             html += "</div>"; // پایان gridContainerWrapper
 
             // Paging
-            if (_enablePaging.HasValue && _enablePaging.Value)
+            if (!_enableLazyLoading && (_enablePaging.HasValue && _enablePaging.Value))
             {
                 html += @"<div class='pagination'>
                     <button id='prevPage' class='btn pagination-btn'>قبلی<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke=' currentColor' stroke-width='2'><polyline points='9 6 15 12 9 18'></polyline></svg></button>
@@ -446,6 +475,28 @@ namespace GridView.TagHelpers
                     <button id='nextPage' class='btn pagination-btn'>بعدی<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='15 18 9 12 15 6'></polyline></svg></svg></button>
                 </div>";
             }
+
+            // 🔹 اضافه کردن JS مخصوص State هر گرید
+                            html += $@"
+                <script>
+                    // اطمینان از وجود آبجکت اصلی
+                    window.Grids = window.Grids || {{}};
+
+                    // وضعیت گرید {_gridName}
+                    window.Grids['{_gridName}'] = {{
+                        currentPage: 1,
+                        pageSize: {_pageSize},
+                        totalPage: 0,
+                        sortColumn: '',
+                        sortAsc: true,
+                        enablePaging: {(_enablePaging.HasValue && _enablePaging.Value).ToString().ToLower()},
+                        customRequestBody: {{}}
+                    }};
+
+                    console.log('Grid ""{_gridName}"" initialized:', window.Grids['{_gridName}']);
+                </script>";
+
+
 
             html += "</div>"; // پایان dynamic-grid-container
 

@@ -16,7 +16,7 @@
         public string Currency { get; set; }
         [GridColumn("مشتري", grouping: false, Editable = false, EnableSorting = true, EnableFiltering = true, EnableGrouping = true)]
         public string Customer { get; set; }
-        [GridColumn("منطقه", grouping: false)]
+        [GridColumn("منطقه", grouping: false,firstDisplay:false)]
         public string Region { get; set; }
         [GridColumn("تاريخ فروش")]
         public string SaleDate { get; set; }
@@ -24,11 +24,11 @@
         public decimal UnitPrice { get; set; }
         [GridColumn("تعداد", grouping: false, Editable = false, EnableSorting = true, EnableFiltering = true, EnableGrouping = true)]
         public int Quantity { get; set; }
-        [GridColumn("نوع پرداخت")]
+        [GridColumn("نوع پرداخت", firstDisplay: false)]
         public string PaymentMethod { get; set; }
         [GridColumn("وضعيت")]
         public string Status { get; set; }
-        [GridColumn("يادداشت")]
+        [GridColumn("يادداشت", firstDisplay: false)]
         public string Notes { get; set; }
         [GridColumn("فرروشنده")]
         public string SalesPerson { get; set; }

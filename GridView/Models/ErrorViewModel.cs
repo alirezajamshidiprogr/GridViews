@@ -1,4 +1,4 @@
-namespace GridView.Models
+namespace GeneralModal.Models
 {
     public class ErrorViewModel
     {

@@ -54,16 +54,18 @@
         .catch(err => console.error('Error fetching popup search data:', err));
 }
 
-function InsUpd_grdProduct_Item(grid) {
+function InsUpd_grdProduct1_Item(btn) {
     debugger
-    var id = getGridDataCell(grid, 'ID');
+    var id = getGridDataCell(btn, 'ID');
     // و ادامه كدهاي خودتون
 }
 
-function Dlt_grdProduct_Item(grid) {
-    var SupplieR = getGridDataCell(grid, 'SupplieR');
+function Dlt_grdProduct_Item(btn) {
+    var SupplieR = getGridDataCell(btn, 'SupplieR');
 
 
-        // و ادامه كدهاي خودتون
+    // و ادامه كدهاي خودتون
     alert(SupplieR);
 }
+
+

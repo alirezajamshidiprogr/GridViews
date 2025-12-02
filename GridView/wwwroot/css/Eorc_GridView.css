@@ -81,8 +81,8 @@
 .grid-filters,
 .grid-row,
 .grid-footer {
-    display: flex !important;
-    width: max-content !important; /* اجازه اسکرول افقی */
+    display: flex: 0 0 auto;
+    /*width: max-content !important;*/ /* اجازه اسکرول افقی */
 }
 
 #gridContainerWrapper .grid-container {
@@ -136,9 +136,9 @@
 .grid-row .grid-cell-Buttons,
 .grid-filters .grid-cell,
 .grid-footer .grid-cell {
-    flex: 1;
-    min-width: 230px;
-    padding:5px 8px;
+    flex: 0 0 auto;
+    min-width: 170px;
+    padding: 5px 8px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -164,13 +164,13 @@
 
 
     #gridContainerWrapper .grid-container .grid-filters input.filter-input {
-        width: 100%; 
+        width: 142px;
         box-sizing: border-box;
         padding: 4px 6px;
         border-radius: 4px;
         border: 1px solid #ccc;
         font-size: 13px;
-        text-align: left;
+        text-align: center;
     }
 
 .grid-filters .grid-cell[data-column="Id"] {
@@ -338,7 +338,7 @@
 
 .filter-icon {
     position: absolute;
-    right: 12px;
+    right: 18px;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
@@ -410,17 +410,14 @@
 
 
     .grid-footer .footer-row .grid-cell[data-footer] .footer-input {
-        width: 100%;
+        width: 142px;
         box-sizing: border-box;
-        padding: 4px 24px 4px 8px;
-        font-size: 0.9em;
-        border: 1px solid #ccc;
+        padding: 4px 6px;
         border-radius: 4px;
-        background: #fdeaea;
+        border: 1px solid #ccc;
+        font-size: 13px;
         text-align: center;
-        font-weight: unset;
-        font-style: inherit;
-        font-stretch: expanded;
+        background: #fdeaea;
         text-decoration: underline;
     }
 
@@ -480,20 +477,20 @@ select option {
 
 #columnSelectorPopup {
     position: fixed;
-    top: 50%;
+    top: 34%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: #ffffff;
-    border: 2px solid #4a90e2; 
+    border: 2px solid #4a90e2;
     padding: 25px 30px;
     direction: rtl;
     z-index: 99999;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.25); 
-    border-radius: 16px; 
+    box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    border-radius: 16px;
     font-family: 'vazir-light', sans-serif;
-    width: 350px;
+    width: 947px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -612,8 +609,8 @@ select option {
     border-radius: 16px;
     box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     padding: 30px 35px;
-    width: 480px;
-    max-height: 80vh;
+    width: 86%;
+    max-height: 93vh;
     overflow-y: auto;
     direction: rtl;
     z-index: 999999;
@@ -621,6 +618,32 @@ select option {
     opacity: 0;
     transition: all 0.25s ease;
 }
+#pdfSelectorPopup {
+    direction: rtl;
+    width: auto;
+    padding: 51px;
+}
+
+.details-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* سه ستون */
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.detail-row {
+    background: #f7f7f7;
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+    .detail-row .label {
+        font-weight: bold;
+        color: #444;
+    }
 
     /* افکت ورود نرم */
     #rowDetailPopup.show {
@@ -654,7 +677,7 @@ select option {
 
         #rowDetailPopup .detail-row .value {
             color: #444;
-            text-align: left;
+            text-align: center;
             direction: ltr;
         }
 
@@ -701,14 +724,45 @@ select option {
 }
 
 
+/* استایل ردیف‌های انتخاب شده */
+.grid-row.selected {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: #fff7e0 !important;
+    color: #150fc4 !important;
+    font-weight: bold;
+}
 
-/*new css*/
-/* CSS */
-/* والد div */
-.grid-print-col {
-    width: 100%; /* تمام عرض ممکن */
-    max-width: 255px; /* محدودیت دلخواه */
-    padding: 5px;
+/* وقتی موس روی ردیف هست */
+.grid-row:hover {
+    background-color: #f1f1f1; /* رنگ خاکی ملایم */
+    transition: background-color 0.3s ease;
+}
+
+/* ردیف‌های معمولی (غیر انتخاب شده) */
+.grid-row {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+    /* انتخاب ردیف‌ها به صورت متحرک برای جلوه بهتر */
+    .grid-row.selected {
+        animation: pulse 0.5s ease-in-out;
+    }
+
+/* انیمیشن پالس برای ردیف‌های انتخاب شده */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* دکمه */
@@ -838,3 +892,254 @@ select option {
     padding: 4px 10px;
     border-bottom: 1px solid #eee;
 }
+
+
+/*استايل هاي مدال */
+/* Base */
+/* Buttons focus */
+.btn:focus, .btn:active:focus, .form-control:focus, .form-select:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.15rem rgba(37,132,251,0.4);
+}
+
+/* Modal content */
+.Eorc_Modal .modal-dialog .modal-content {
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border: none;
+    overflow: hidden;
+    background-color: #fff;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    direction: rtl;
+    font-family: 'vazir-light', sans-serif;
+}
+
+    .Eorc_Modal .modal-dialog .modal-content .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem; /* کمی فاصله برای زیبایی */
+        border-bottom: none;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        /* بک‌گراند ساده */
+        background-color: #2575fc; /* یک رنگ شفاف و شیک */
+        color: #fff;
+        /* سایه ملایم برای جذابیت */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* عنوان داخل هدر */
+        .Eorc_Modal .modal-dialog .modal-content .modal-header .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+    /* دکمه Close */
+        .Eorc_Modal .modal-dialog .modal-content .modal-header .btn-close {
+            margin: 0.75rem 1rem;
+            filter: brightness(1.2);
+            transition: transform 0.2s, filter 0.2s;
+            cursor: pointer; /* ← تغییر داده شد */
+        }
+
+            .Eorc_Modal .modal-dialog .modal-content .modal-header .btn-close:hover {
+                transform: scale(1.2);
+                filter: brightness(1.5);
+            }
+
+        .Eorc_Modal .modal-dialog .modal-content .modal-header .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            padding: 1rem 1.5rem;
+            margin: 0;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .Eorc_Modal .modal-dialog .modal-content .modal-header .btn-close {
+            margin: 0.75rem 1rem;
+            filter: brightness(1.2);
+            transition: transform 0.2s, filter 0.2s;
+            cursor: default; /* نشان می‌دهد غیر قابل کلیک است */
+        }
+
+            .Eorc_Modal .modal-dialog .modal-content .modal-header .btn-close:hover {
+                transform: scale(1.2);
+                filter: brightness(1.5);
+            }
+
+/* Modal body */
+    .Eorc_Modal .modal-dialog .modal-content .modal-body {
+        padding: 2rem;
+        font-size: 0.95rem;
+        color: #333;
+    }
+
+/* Form elements */
+.form-control, .form-select, .form-check-input {
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s;
+}
+
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(37,132,251,0.25);
+        border-color: #2575fc;
+    }
+
+/* Validation */
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+}
+
+/* Footer */
+.Eorc_Modal .modal-dialog .modal-content .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+    .Eorc_Modal .modal-dialog .modal-content .modal-footer .btn-primary {
+        background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
+        color: #fff !important;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        gap: 5px;
+    }
+
+        .modal-footer .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+/* Modal animation */
+@keyframes modalPopUp {
+    0% {
+        transform: translateY(100px) scale(0.8);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(-10px) scale(1.05);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateY(5px) scale(0.98);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal.show .modal-dialog {
+    animation: modalPopUp 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+/* Backdrop */
+.modal-backdrop.show {
+    opacity: 0.6 !important;
+    backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+    }
+}
+
+.Eorc_Modal .modal-dialog .modal-content .modal-header button {
+    font-size: 1.9em;
+    color: white;
+    background: transparent;
+    border: none;
+}
+
+/* بسته به Bootstrap، تیک به خاطر line-height جابجا می‌شود، این صفرکننده همه را فیکس می‌کند */
+.custom-check .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    border: 2px solid #6c757d;
+    border-radius: 4px;
+    position: relative;
+    top: 2px; /* این خط کل مشکل تو را حل می‌کند */
+}
+
+    /* حالت فعال */
+    .custom-check .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+        /* تیک دقیق وسط */
+        .custom-check .form-check-input:checked::after {
+            content: "✔";
+            position: absolute;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+
+/* Default size */
+.modal-dialog {
+    max-width: 500px; /* سایز پیش‌فرض */
+}
+
+/* Small */
+.modal-sm {
+    max-width: 300px;
+}
+
+/* Large */
+.modal-lg {
+    max-width: 800px;
+}
+
+/* Extra Large */
+.modal-xl {
+    max-width: 1140px;
+}
+
+/* Extra Extra Large */
+.modal-xxl {
+    max-width: 1400px;
+}
+
+/* هم‌ترازی عمودی و padding مناسب */
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+
+
