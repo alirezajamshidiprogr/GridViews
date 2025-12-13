@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 public static class GridExtensions
 {
@@ -200,12 +201,235 @@ public static class GridExtensions
             Items = items
         };
     }
+    public static async Task<GridResultDto<T>> GetGridDataEfCoreAsync<T>(IQueryable<T> query) where T : class
+    {
+        try
+        {
+            var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService<IHttpContextAccessor>();
+            var headerValue = httpContextAccessor?.HttpContext?.Request.Headers["GridRequest"].FirstOrDefault();
+            var request = headerValue?.FromGridRequestHeader();
+
+
+            if (query == null) query = Enumerable.Empty<T>().AsQueryable();
+
+            var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            // فیلترها
+            if (request.Filters != null)
+            {
+                foreach (var f in request.Filters)
+                {
+                    if (f.Value == null || string.IsNullOrEmpty(f.Value.Value)) continue;
+
+                    var prop = props.FirstOrDefault(p => string.Equals(p.Name, f.Key, StringComparison.OrdinalIgnoreCase));
+                    if (prop == null) continue;
+
+                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                    if (underlyingType == typeof(string))
+                    {
+                        var val = f.Value.Value.NormalizePersian();
+                        switch (f.Value.Type)
+                        {
+                            case "contains":
+                                query = query.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"%{val}%"));
+                                break;
+                            case "eq":
+                                query = query.Where(x => EF.Property<string>(x, prop.Name) == val);
+                                break;
+                            case "neq":
+                                query = query.Where(x => EF.Property<string>(x, prop.Name) != val);
+                                break;
+                            case "startswith":
+                                query = query.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"{val}%"));
+                                break;
+                            case "endswith":
+                                query = query.Where(x => EF.Functions.Like(EF.Property<string>(x, prop.Name), $"%{val}"));
+                                break;
+                        }
+                    }
+                    else if (underlyingType == typeof(int))
+                    {
+                        if (int.TryParse(f.Value.Value, out var val))
+                        {
+                            switch (f.Value.Type)
+                            {
+                                case "eq": query = query.Where(x => EF.Property<int>(x, prop.Name) == val); break;
+                                case "neq": query = query.Where(x => EF.Property<int>(x, prop.Name) != val); break;
+                                case "gt": query = query.Where(x => EF.Property<int>(x, prop.Name) > val); break;
+                                case "lt": query = query.Where(x => EF.Property<int>(x, prop.Name) < val); break;
+                            }
+                        }
+                    }
+                    else if (underlyingType == typeof(decimal))
+                    {
+                        if (decimal.TryParse(f.Value.Value, out var val))
+                        {
+                            switch (f.Value.Type)
+                            {
+                                case "eq": query = query.Where(x => EF.Property<decimal>(x, prop.Name) == val); break;
+                                case "neq": query = query.Where(x => EF.Property<decimal>(x, prop.Name) != val); break;
+                                case "gt": query = query.Where(x => EF.Property<decimal>(x, prop.Name) > val); break;
+                                case "lt": query = query.Where(x => EF.Property<decimal>(x, prop.Name) < val); break;
+                            }
+                        }
+                    }
+                    else if (underlyingType == typeof(DateTime))
+                    {
+                        if (DateTime.TryParse(f.Value.Value, out var val))
+                        {
+                            switch (f.Value.Type)
+                            {
+                                case "eq": query = query.Where(x => EF.Property<DateTime>(x, prop.Name) == val); break;
+                                case "neq": query = query.Where(x => EF.Property<DateTime>(x, prop.Name) != val); break;
+                                case "gt": query = query.Where(x => EF.Property<DateTime>(x, prop.Name) > val); break;
+                                case "lt": query = query.Where(x => EF.Property<DateTime>(x, prop.Name) < val); break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // سورت
+            if (!string.IsNullOrEmpty(request.SortColumn))
+            {
+                var prop = typeof(T).GetProperty(request.SortColumn);
+                if (prop != null)
+                {
+                    query = request.SortAsc
+                        ? query.OrderBy(x => EF.Property<object>(x, prop.Name))
+                        : query.OrderByDescending(x => EF.Property<object>(x, prop.Name));
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+
+            int page = request.Page <= 0 ? 1 : request.Page;
+            int pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+
+            var items = request.enablePaging
+                ? await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync()
+                : await query.ToListAsync();
+
+            return new GridResultDto<T>
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Items = items
+            };
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    public static async Task<GridResultDto<T>> GetGridDataFromSPAsync<T>(string spName) where T : class, new()
+    {
+        try
+        {
+            // استفاده از connection pool به جای باز و بسته کردن مکرر اتصال
+            using SqlConnection conn = new SqlConnection("Server=SAP-16;Database=GridViewSample;User ID=sa;Password=137011;TrustServerCertificate=True;");
+            await conn.OpenAsync();
+
+            var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService<IHttpContextAccessor>();
+            var headerValue = httpContextAccessor?.HttpContext?.Request.Headers["GridRequest"].FirstOrDefault();
+
+            // اگر headerValue وجود داشته باشد، اطلاعات را از آن می‌گیریم
+            var request = headerValue?.FromGridRequestHeader();
+
+            if (request == null)
+            {
+                // اگر هیچ درخواست معتبر نداشتیم، می‌توانیم یک response خالی یا خطا برگردانیم
+                return new GridResultDto<T> { Items = new List<T>(), TotalCount = 0, Page = 1, PageSize = 10 };
+            }
+
+            using var cmd = new SqlCommand(spName, conn)
+            {
+                CommandType = System.Data.CommandType.StoredProcedure
+            };
+
+            // اضافه کردن پارامترها به SP
+            cmd.Parameters.AddWithValue("@Page", request.Page <= 0 ? 1 : request.Page);
+            cmd.Parameters.AddWithValue("@PageSize", request.PageSize <= 0 ? 10 : request.PageSize);
+            cmd.Parameters.AddWithValue("@SortColumn", request.SortColumn ?? "");
+            cmd.Parameters.AddWithValue("@SortAsc", request.SortAsc);
+            cmd.Parameters.AddWithValue("@Filters", JsonSerializer.Serialize(request.Filters ?? new Dictionary<string, GridFilter>()));
+
+            var list = new List<T>();
+            int totalCount = 0;
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            // خواندن نتایج داده‌ها
+            while (await reader.ReadAsync())
+            {
+                var obj = new T();
+                foreach (var prop in typeof(T).GetProperties())
+                {
+                    if (!reader.HasColumn(prop.Name) || reader[prop.Name] is DBNull) continue;
+
+                    var value = reader[prop.Name];
+                    var propType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                    try
+                    {
+                        // تبدیل مقدار SQL به نوع Property
+                        var safeValue = Convert.ChangeType(value, propType);
+                        prop.SetValue(obj, safeValue);
+                    }
+                    catch
+                    {
+                        // اگر تبدیل نشد می‌توانیم مقدار پیش‌فرض بدیم یا خطا نگیریم
+                        prop.SetValue(obj, prop.PropertyType.IsValueType ? Activator.CreateInstance(propType) : null);
+                    }
+                }
+                list.Add(obj);
+            }
+
+            // فرض بر این که SP نتیجه TotalCount رو به صورت جداگانه می‌ده
+            if (reader.NextResult())
+            {
+                if (await reader.ReadAsync())
+                {
+                    totalCount = reader.GetInt32(0);
+                }
+            }
+
+            return new GridResultDto<T>
+            {
+                Items = list,
+                TotalCount = totalCount,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                GroupBy = request.GroupBy,
+            };
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+
+    // اکستنشن کمکی برای بررسی ستون در SqlDataReader
+    public static bool HasColumn(this SqlDataReader reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+            if (reader.GetName(i).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        return false;
+    }
+
     public static async Task<T> ReadRequestBodyAsync<T>(HttpRequest request) where T : new()
     {
         if (request == null || request.ContentLength == null || request.ContentLength == 0)
             return new T();
 
-        request.EnableBuffering(); 
+        request.EnableBuffering();
 
         using var reader = new StreamReader(request.Body, leaveOpen: true);
         var body = await reader.ReadToEndAsync();

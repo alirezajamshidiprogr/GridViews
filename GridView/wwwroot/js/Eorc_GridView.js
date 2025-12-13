@@ -120,10 +120,14 @@ async function exportGridToPdf(gridName) {
 
 // کمکی برای دسترسی امن به مقدار سلول
 function getItemValue(item, prop) {
-    if (!item) return '';
-    if (prop in item) return item[prop]; // PascalCase
+    if (!item)
+        return '';
+    if (prop in item)
+        return item[prop]; // PascalCase
     const camel = prop.charAt(0).toLowerCase() + prop.slice(1);
-    if (camel in item) return item[camel]; // camelCase
+    if (camel in item)
+        return item[camel]; // camelCase
+
     for (const k of Object.keys(item)) {
         if (k.toLowerCase() === prop.toLowerCase()) return item[k]; // case-insensitive
     }
@@ -235,7 +239,7 @@ function enableRowDetailsPopup() {
                     </div>
                     <div class="popup-buttons" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
                         <button class="close-btn btn primary" title="بستن">
-                            ✖بستن فرم
+                             <i class="fa fa-times-circle"></i> بستن
                         </button>
                         <button class="export-btn btn secondary" title="خروجی PNG" 
                             style="border: 1px solid #b2d5fb;">
@@ -425,7 +429,7 @@ function setStyleRows(gridName) {
             const $row = $(this);
             const productName = $row.find('.grid-cell[data-cell="ProductName"]').attr('original-content');
             if (productName === 'پرینتر') {
-                
+
                 $row.find('.grid-cell').attr('style', 'background-color: #e6ffcd !important; color: #721c24 !important;');
             }
         });
@@ -705,6 +709,207 @@ function exportGridToExcelXlsx(gridName) {
     XLSX.writeFile(wb, "گزارش_گرید.xlsx", { bookSST: true, cellStyles: true });
 }
 
+// advanced Filters 
+function displayAdvancedFilter(gridName) {
+    const grid = document.getElementById(gridName);
+    if (!grid) return;
+
+    const popup = grid.querySelector('.advanced-filter-popup');
+    if (popup) popup.style.display = "block";
+}
+
+/// بستن و باز كردم فيلتر هر ستون با مساوي نامساوي و ...
+// باز و بسته کردن منوی فیلتر
+function initFilterIcons(gridName) {
+    const grid = document.getElementById(gridName);
+    if (!grid) return;
+
+    const icons = grid.querySelectorAll('.filter-icon');
+    icons.forEach((icon, index) => {
+        icon.dataset.iconId = index;
+
+        icon.addEventListener('click', e => {
+            e.stopPropagation();
+            const cell = e.target.closest('.grid-cell');
+            const originalMenu = cell.querySelector('.filter-menu');
+            if (!originalMenu) return;
+
+            // حذف منوهای باز قبلی فقط در این گرید
+            grid.querySelectorAll('.filter-menu.clone').forEach(m => m.remove());
+
+            // clone منو
+            const menu = originalMenu.cloneNode(true);
+            menu.classList.add('clone');
+            menu.dataset.originalIconId = icon.dataset.iconId;
+            document.body.appendChild(menu);
+
+            const rect = cell.getBoundingClientRect();
+            menu.style.position = 'absolute';
+            menu.style.top = rect.bottom + 'px';
+            menu.style.left = rect.left + 'px';
+            menu.style.display = 'block';
+            menu.style.zIndex = 9999;
+
+            // بستن وقتی بیرون کلیک شد
+            const clickOutside = event => {
+                if (!menu.contains(event.target) && !icon.contains(event.target)) {
+                    menu.remove();
+                    document.removeEventListener('click', clickOutside);
+                }
+            };
+            document.addEventListener('click', clickOutside);
+        });
+    });
+}
+
+// بروز رساني فوتر گريد 
+function updateGridFooters(calcType = null, targetFooter = null) {
+    // اگر فوتر خاصی ارسال شده باشد، فقط آن را محاسبه می‌کنیم
+    const footers = targetFooter ? [targetFooter] : document.querySelectorAll('[data-footer]');
+
+    footers.forEach(footer => {
+        const field = footer.dataset.footer; // فیلد مربوط به فوتر
+        const calc = calcType || footer.dataset.calcState || 'sum'; // نوع محاسبه
+
+        // برای هر گرید، سلول‌های مرتبط با این فیلد را پیدا می‌کنیم
+        const gridContainer = footer.closest('.dynamic-grid-container');
+        const cells = Array.from(gridContainer.querySelectorAll(`[data-cell="${field}"]`))
+            .filter(c => c.style.display !== 'none') // فقط سلول‌های قابل مشاهده
+            .map(c => {
+                let val = c.textContent.trim();
+
+                // تبدیل اعداد فارسی به انگلیسی
+                val = val.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+
+                // حذف جداکننده هزارگان
+                val = val.replace(/,/g, '');
+
+                return val;
+            })
+            .filter(v => /^[0-9]+(\.[0-9]+)?$/.test(v)) // فقط اعداد صحیح یا اعشاری
+            .map(Number); // تبدیل به عدد
+
+        const input = footer.querySelector('.footer-input');
+
+        if (cells.length === 0) {
+            input.value = ''; // اگر هیچ مقداری وجود نداشت، ورودی خالی باشد
+            return;
+        }
+
+        // محاسبه نتیجه با توجه به نوع calc
+        let result = 0;
+        switch (calc) {
+            case 'avg': result = cells.reduce((a, b) => a + b, 0) / cells.length; break;
+            case 'count': result = cells.length; break;
+            case 'max': result = Math.max(...cells); break;
+            case 'min': result = Math.min(...cells); break;
+            default: result = cells.reduce((a, b) => a + b, 0); break; // پیش‌فرض جمع
+        }
+
+        // فرمت کردن نتیجه به فرمت عددی فارسی
+        const formatted = result.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+
+        // قرار دادن نتیجه در ورودی فوتر
+        if (input) {
+            let label = { sum: 'جمع', avg: 'میانگین', count: 'تعداد', max: 'بیشترین', min: 'کمترین' }[calc] || 'جمع';
+            input.value = `${label} = ${formatted}`;
+        }
+
+        // ذخیره نوع محاسبه برای استفاده‌های بعدی
+        footer.dataset.calcState = calc;
+    });
+}
+
+// تغییر آیکن هنگام انتخاب گزینه از منو
+document.addEventListener('click', function (e) {
+    const li = e.target.closest('.filter-menu li');
+    if (!li) return;
+
+    e.stopPropagation();
+
+    const menu = li.closest('.filter-menu');
+    if (!menu) return;
+
+    const iconId = menu.dataset.originalIconId;
+
+    // پیدا کردن آیکن که منو بهش تعلق داره
+    const icon = document.querySelector(`.filter-icon[data-icon-id="${iconId}"]`);
+    if (!icon) return;
+
+    // پیدا کردن گرید والد آیکن
+    const gridContainer = icon.closest('.dynamic-grid-container');
+    if (!gridContainer) return;
+
+    const gridName = gridContainer.id; // id همان gridName است
+    const gridState = window.Grids[gridName];
+    if (!gridState) return;
+
+    // تغییر نوع فیلتر و آیکن
+    const filterType = li.dataset.type || 'contains';
+    const selectedIcon = li.dataset.icon || '';
+    icon.textContent = `🔍 ${selectedIcon}`;
+
+    const cell = icon.closest('.grid-cell');
+    if (!cell) return;
+
+    const input = cell.querySelector('.filter-input');
+    if (!input) return;
+
+    input.dataset.filterType = filterType;
+
+    // اجرا fetch فقط برای گرید مربوطه
+    gridState.currentPage = 1;
+    fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+});
+
+//بستن فرم فيلتر پيشرفته 
+function closeAdvancedFilter(gridName) {
+
+    const popup = document.getElementById(`advancedFilterPopup_${gridName}`);
+    if (popup) {
+        popup.style.display = "none";
+    }
+}
+
+// يوزر استايل row
+function applyStylesToGridRows(styles, condition) {
+    const rows = document.querySelectorAll('.grid-row');
+
+    rows.forEach(row => {
+        let match = true;
+
+        if (condition) {
+            for (const key in condition) {
+                const keyLower = key.toLowerCase(); // ✅ همیشه lowercase
+                // جستجوی سلولی که data-cell برابر با key (بدون حساسیت به حروف) باشد
+                const cell = Array.from(row.querySelectorAll('[data-cell]'))
+                    .find(c => c.dataset.cell.toLowerCase() === keyLower);
+
+                const cellValue = cell ? cell.textContent.trim() : "";
+                const condValue = condition[key];
+
+                if (Array.isArray(condValue)) {
+                    if (!condValue.map(v => v.toString()).includes(cellValue)) {
+                        match = false;
+                        break;
+                    }
+                } else {
+                    if (cellValue !== condValue.toString()) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!match) return;
+
+        for (const property in styles) {
+            row.style.setProperty(property, styles[property], 'important');
+        }
+    });
+}
+
 // _________________ End Utility _______________
 
 // اعمال فیلتر
@@ -732,7 +937,8 @@ function applyFilters(items, filters) {
 }
 
 // رندر ردیف‌ها
-function renderRows(items, columns = null, gridName = null) {
+function renderRows(items, columns = null, gridName = null, filters, sortColumn, sortAsc) {
+
     if (!Array.isArray(items)) return;
 
     const container = gridName
@@ -744,9 +950,69 @@ function renderRows(items, columns = null, gridName = null) {
     const bodyContainer = container.querySelector('.grid-body');
     if (!bodyContainer) return;
 
-    //if (gridState.currentPage === 1) {
+    var isLazyLoading = document.querySelector(`#${gridName} #gridData`)?.dataset.lazyLoading === 'true';
+    // در حالت lazy loading باید همیشه body پاک شود
+    if (!isLazyLoading) {
         bodyContainer.innerHTML = '';
-    //}
+    }
+
+    if ((isLazyLoading) && filters && Object.keys(filters).length > 0) {
+        debugger
+        const cacheObj = window.allItemsCache || {};
+
+        // --- 1) Filtering ---
+        if (filters && Object.keys(filters).length > 0) {
+            filteredItems = Object.values(cacheObj)
+                .flatMap(itemArray => Array.isArray(itemArray) ? itemArray : [itemArray])
+                .filter(item => {
+                    return Object.keys(filters).every(key => {
+                        const filterObj = filters[key];
+                        if (!filterObj || !filterObj.Value) return true;
+
+                        let value = getItemValue(item, key);
+                        value = value == null ? "" : value.toString().trim();
+
+                        const filterValue = (filterObj.Value ?? "").toString().trim();
+
+                        switch (filterObj.Type) {
+                            case "contains": return value.includes(filterValue);
+                            case "equals": return value === filterValue;
+                            case "starts": return value.startsWith(filterValue);
+                            default: return true;
+                        }
+                    });
+                });
+        }
+
+        debugger
+        // --- 2) Sorting ---
+        //if (sortColumn) {
+        //    filteredItems.sort((a, b) => {
+        //        let va = getItemValue(a, sortColumn);
+        //        let vb = getItemValue(b, sortColumn);
+
+        //        va = va == null ? "" : va;
+        //        vb = vb == null ? "" : vb;
+
+        //        const na = parseFloat(va);
+        //        const nb = parseFloat(vb);
+
+        //        const aIsNum = !isNaN(na);
+        //        const bIsNum = !isNaN(nb);
+
+        //        if (aIsNum && bIsNum) return sortAsc ? na - nb : nb - na;
+
+        //        const sa = va.toString().toLowerCase();
+        //        const sb = vb.toString().toLowerCase();
+
+        //        if (sa < sb) return sortAsc ? -1 : 1;
+        //        if (sa > sb) return sortAsc ? 1 : -1;
+        //        return 0;
+        //    });
+        //}
+
+        bodyContainer.innerHTML = '';
+    }
 
     if (!columns) {
         const localDataElement = container.querySelector('#gridDataLocal');
@@ -765,7 +1031,6 @@ function renderRows(items, columns = null, gridName = null) {
     const enableEditButton = gridData?.dataset.editButton === 'true';
     const enableDeleteButton = gridData?.dataset.deleteButton === 'true';
 
-    
     // محاسبه تعداد کل صفحات
     const totalPages = gridState.totalPage || 1;
 
@@ -802,7 +1067,9 @@ function renderRows(items, columns = null, gridName = null) {
         return;
     }
 
-    items.forEach(item => {
+    const rowsToRender = (filters && Object.keys(filters).length > 0) ? filteredItems : items;
+
+    rowsToRender.forEach(item => {
         const row = document.createElement('div');
         row.className = 'grid-row';
 
@@ -812,12 +1079,12 @@ function renderRows(items, columns = null, gridName = null) {
 
             if (enableEditButton) {
                 let insEditFunction = gridData?.dataset.editFunctionName || `InsUpd_${gridName}_Item(this)`;
-                actions.innerHTML = `<button class="btn primary edit-btn" onclick='${insEditFunction}'>ویرایش</button>`;
+                actions.innerHTML = `<button class="btn primary edit-btn" onclick='${insEditFunction}'> <i class="fa fa-edit"></i> ویرایش</button>`;
             }
 
             if (enableDeleteButton) {
                 let deleteFunction = gridData?.dataset.deleteFunction || `Dlt_${gridName}_Item(this)`;
-                actions.innerHTML += `<button class="btn danger delete-btn" onclick='${deleteFunction}'>حذف</button>`;
+                actions.innerHTML += `<button class="btn danger delete-btn" onclick='${deleteFunction}'><i class="fa fa-trash"></i> حذف</button>`;
             }
 
             row.appendChild(actions);
@@ -834,7 +1101,8 @@ function renderRows(items, columns = null, gridName = null) {
             if (!isNaN(originalValue) && originalValue !== null && originalValue !== '') {
                 div.textContent = Number(originalValue).toLocaleString();
             } else {
-                div.textContent = truncateText(originalValue);
+                div.textContent = (originalValue);
+                //div.textContent = truncateText(originalValue);
             }
 
             if (!col.visible) {
@@ -849,7 +1117,7 @@ function renderRows(items, columns = null, gridName = null) {
     });
 
     updateGridFooters();
-    
+
     const pageInfo = container.querySelector('#pageInfo');
     if (pageInfo) pageInfo.textContent = `صفحه ${currentPage} از ${totalPages}`;
 
@@ -867,9 +1135,10 @@ function renderGroupedRows(groups, columns, gridName = null) {
     const bodyContainer = container.querySelector('.grid-body');
     if (!bodyContainer) return;
 
-    //if (gridState.currentPage === 1) {
+    const gridState = window.Grids[gridName] || { currentPage: 1, pageSize: 10 };
+    if (gridState.currentPage === 1) {
         bodyContainer.innerHTML = '';
-    //}
+    }
 
     const gridData = container.querySelector('#gridData');
     const enableEditButton = gridData?.dataset.editButton === 'true';
@@ -888,11 +1157,12 @@ function renderGroupedRows(groups, columns, gridName = null) {
         toggle.style.marginRight = '8px';
         toggle.style.color = '#007bff';
         toggle.style.fontWeight = 'bold';
-        toggle.textContent = `کل : [ ${g.group.length} ]`;
+        toggle.textContent = `[- ${g.group.length} ركورد]`;
 
         const title = document.createElement('span');
         title.style.marginRight = '6px';
         title.style.fontWeight = '500';
+        title.textContent = g.key; // ← نمایش عنوان گروه
 
         groupHeader.appendChild(toggle);
         groupHeader.appendChild(title);
@@ -906,18 +1176,19 @@ function renderGroupedRows(groups, columns, gridName = null) {
             const row = document.createElement('div');
             row.className = 'grid-row';
 
+            // دکمه‌ها
             if (enableEditButton || enableDeleteButton) {
                 const actions = document.createElement('div');
                 actions.className = 'grid-cell grid-cell-Buttons';
 
                 if (enableEditButton) {
                     let insEditFunction = gridData?.dataset.editFunction || `InsUpd_${gridName}_Item(this)`;
-                    actions.innerHTML = `<button class="btn primary edit-btn" onclick='${insEditFunction}'>ویرایش</button>`;
+                    actions.innerHTML = `<button class="btn primary edit-btn" onclick='${insEditFunction}'> <i class="fa fa-edit"></i> ویرایش</button>`;
                 }
 
                 if (enableDeleteButton) {
                     let deleteFunction = gridData?.dataset.deleteFunction || `Dlt_${gridName}_Item(this)`;
-                    actions.innerHTML += `<button class="btn danger delete-btn" onclick='${deleteFunction}'>حذف</button>`;
+                    actions.innerHTML += `<button class="btn danger delete-btn" onclick='${deleteFunction}'><i class="fa fa-trash"></i> حذف</button>`;
                 }
 
                 row.appendChild(actions);
@@ -930,12 +1201,9 @@ function renderGroupedRows(groups, columns, gridName = null) {
 
                 const originalValue = getItemValue(item, col.prop);
                 div.setAttribute('original-content', originalValue);
-
-                if (!isNaN(originalValue) && originalValue !== null && originalValue !== '') {
-                    div.textContent = Number(originalValue).toLocaleString();
-                } else {
-                    div.textContent = truncateText(originalValue);
-                }
+                div.textContent = !isNaN(originalValue) && originalValue !== null && originalValue !== ''
+                    ? Number(originalValue).toLocaleString()
+                    : truncateText(originalValue);
 
                 if (!col.visible) {
                     div.style.display = 'none';
@@ -956,8 +1224,8 @@ function renderGroupedRows(groups, columns, gridName = null) {
             isExpanded = !isExpanded;
             rowsWrapper.style.display = isExpanded ? 'block' : 'none';
             toggle.textContent = isExpanded
-                ? `[- ${g.group.length}]`
-                : `[+ ${g.group.length}]`;
+                ? `[- ${g.group.length} ركورد]`
+                : `[+ ${g.group.length} ركورد]`;
         });
     });
 }
@@ -1018,20 +1286,26 @@ function fetchGridData(page, size, customBody = null, gridName = null) {
         return;
     }
 
+
+    const gridData = document.querySelector(`#${gridName} #gridData`);
+    var isLazyLoading = gridData?.dataset.lazyLoading === 'true';
     // حالت Paging معمولی یا Fetch از سرور
+
     if (urlElement && urlElement.dataset.url) {
         const gridRequest = {
             Page: page,
             PageSize: size,
-            SortColumn: gridState.sortColumn,
+            SortColumn: isLazyLoading ? "" : gridState.sortColumn,
             SortAsc: gridState.sortAsc,
             GroupBy: groupBy,
-            Filters: filters,
-            enablePaging: gridState.enablePaging
+            Filters: isLazyLoading ? {} : filters,
+            enablePaging: gridState.enablePaging,
+            lazyLoading: isLazyLoading
         };
 
         const encodedGridRequest = btoa(unescape(encodeURIComponent(JSON.stringify(gridRequest))));
         const bodyToSend = customBody || gridState.customRequestBody || {};
+
 
         fetch(urlElement.dataset.url, {
             method: 'POST',
@@ -1059,7 +1333,8 @@ function fetchGridData(page, size, customBody = null, gridName = null) {
                 if (groupBy && items.length) {
                     renderGroupedRows(groupItems(items, groupBy), columns, gridName);
                 } else {
-                    renderRows(items, columns, gridName);
+                    window.allItemsCache[gridName];
+                    renderRows(items, columns, gridName, filters, gridState.sortColumn, gridState.sortAsc);
                 }
             })
             .catch(err => console.error(`Error fetching grid data for ${gridName}:`, err));
@@ -1069,71 +1344,79 @@ function fetchGridData(page, size, customBody = null, gridName = null) {
 }
 
 // initialize
-function initGrid(gridName) {
-    // دریافت وضعیت گرید از Map عمومی
+function initGrid(gridName, lazyLoading = true) {
     const gridState = window.Grids[gridName];
-    if (!gridState) {
-        console.error(`Grid '${gridName}' is not initialized in window.Grids`);
-        return;
-    }
+    if (!gridState) return;
 
     const grid = document.getElementById(gridName);
     if (!grid) return;
 
-    // مقداردهی pageSize از دیتا-اتربیووت
+    // مقداردهی pageSize
     gridState.pageSize = parseInt(grid.dataset.pageSize || gridState.pageSize);
 
-    // همگام‌سازی اولیه (در صورت وجود)
+    // همگام‌سازی در صورت وجود
     if (typeof syncWith === 'function') syncWith(gridName);
 
-    // بارگذاری داده اولیه
+    // بارگذاری اولیه داده
     if (typeof fetchGridData === 'function') {
         fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
     }
 
-    // گرفتن المان‌های صفحه‌بندی و کنترل‌ها
-    const nextBtn = grid.querySelector('#nextPage');
-    const prevBtn = grid.querySelector('#prevPage');
-    const pageSizeSelector = grid.querySelector('#pageSizeSelector');
-    const groupBySelector = grid.querySelector('#groupBySelector');
-    const refreshBtn = grid.querySelector('#refreshBtn');
+    const gridBody = grid.querySelector('.grid-body');
+    if (lazyLoading === "true" && gridBody) {
+        // تنظیم ارتفاع برای فعال کردن اسکرول
+        gridBody.style.height = '70vh'; // می‌توانی مقدار دلخواه بدهی
+        gridBody.style.overflowY = 'scroll';
+        gridBody.style.overflowX = 'unset';
 
-    // رویدادها
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            gridState.currentPage++;
-            fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
-        });
-    }
-
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (gridState.currentPage > 1) {
-                gridState.currentPage--;
+        // اضافه کردن رویداد scroll برای لیزی لود
+        gridBody.addEventListener('scroll', () => {
+            const threshold = 50; // px قبل از پایین
+            if (gridBody.scrollTop + gridBody.clientHeight >= gridBody.scrollHeight - threshold) {
+                gridState.currentPage++;
                 fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
             }
         });
-    }
+    } else {
+        // مدیریت Paging عادی
+        const nextBtn = grid.querySelector('#nextPage');
+        const prevBtn = grid.querySelector('#prevPage');
+        const pageSizeSelector = grid.querySelector('#pageSizeSelector');
+        const groupBySelector = grid.querySelector('#groupBySelector');
+        const refreshBtn = grid.querySelector('#refreshBtn');
 
-    if (pageSizeSelector) {
-        pageSizeSelector.addEventListener('change', function () {
-            gridState.pageSize = parseInt(this.value);
-            gridState.currentPage = 1;
-            fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
-        });
-    }
-
-    if (groupBySelector) {
-        groupBySelector.addEventListener('change', () => {
-            fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
-        });
-    }
-
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            gridState.currentPage = 1;
-            fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
-        });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                gridState.currentPage++;
+                fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+            });
+        }
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (gridState.currentPage > 1) {
+                    gridState.currentPage--;
+                    fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+                }
+            });
+        }
+        if (pageSizeSelector) {
+            pageSizeSelector.addEventListener('change', function () {
+                gridState.pageSize = parseInt(this.value);
+                gridState.currentPage = 1;
+                fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+            });
+        }
+        if (groupBySelector) {
+            groupBySelector.addEventListener('change', () => {
+                fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+            });
+        }
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                gridState.currentPage = 1;
+                fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
+            });
+        }
     }
 
     // فیلترها
@@ -1158,138 +1441,24 @@ function initGrid(gridName) {
     }
 }
 
-// advanced Filters 
-function displayAdvancedFilter(gridName) {
-    const grid = document.getElementById(gridName);
-    if (!grid) return;
-
-    const popup = grid.querySelector('.advanced-filter-popup');
-    if (popup) popup.style.display = "block";
-}
-
-function closeAdvancedFilter(gridName) {
-    
-    const popup = document.getElementById(`advancedFilterPopup_${gridName}`);
-    if (popup) {
-        popup.style.display = "none";
-    }
-}
-
-
 document.addEventListener('DOMContentLoaded', () => {
     // مقداردهی همه گریدهای تعریف شده در window.Grids
     Object.keys(window.Grids).forEach(gridName => {
         const gridData = document.querySelector(`#${gridName} #gridData`);
+        var isLazyLoading = gridData?.dataset.lazyLoading
+        initGrid(gridName, isLazyLoading);
+        initFilterIcons(gridName);
+        //adjustGridColumnWidths(gridName);
+        enableRowDetailsPopup(gridName);
 
-        debugger
-        // اگر lazy loading فعال نبود
-        if (!gridData || gridData.dataset.lazyLoading !== "true") {
-            initGrid(gridName);           // هر گرید با نام خودش مقداردهی می‌شود
-            initFilterIcons(gridName);    // آیکن‌ها فقط برای همین گرید فعال می‌شوند
-            // تنظیم عرض ستون‌ها بر اساس متن
-            //adjustGridColumnWidths(gridName);
-        }
-
-        // اگر lazy loading فعال است می‌توان اینجا Lazy Loading را فعال کرد
-        // else {
-        //     initLazyLoading(gridName);
-        // }
     });
 
     enableGridRowSelection();
 });
 
-/// بستن و باز كردم فيلتر هر ستون با مساوي نامساوي و ...
-// باز و بسته کردن منوی فیلتر
-function initFilterIcons(gridName) {
-    const grid = document.getElementById(gridName);
-    if (!grid) return;
-
-    const icons = grid.querySelectorAll('.filter-icon');
-    icons.forEach((icon, index) => {
-        icon.dataset.iconId = index;
-
-        icon.addEventListener('click', e => {
-            e.stopPropagation();
-            const cell = e.target.closest('.grid-cell');
-            const originalMenu = cell.querySelector('.filter-menu');
-            if (!originalMenu) return;
-
-            // حذف منوهای باز قبلی فقط در این گرید
-            grid.querySelectorAll('.filter-menu.clone').forEach(m => m.remove());
-
-            // clone منو
-            const menu = originalMenu.cloneNode(true);
-            menu.classList.add('clone');
-            menu.dataset.originalIconId = icon.dataset.iconId;
-            document.body.appendChild(menu);
-
-            const rect = cell.getBoundingClientRect();
-            menu.style.position = 'absolute';
-            menu.style.top = rect.bottom + 'px';
-            menu.style.left = rect.left + 'px';
-            menu.style.display = 'block';
-            menu.style.zIndex = 9999;
-
-            // بستن وقتی بیرون کلیک شد
-            const clickOutside = event => {
-                if (!menu.contains(event.target) && !icon.contains(event.target)) {
-                    menu.remove();
-                    document.removeEventListener('click', clickOutside);
-                }
-            };
-            document.addEventListener('click', clickOutside);
-        });
-    });
-}
-
-// تغییر آیکن هنگام انتخاب گزینه از منو
-document.addEventListener('click', function (e) {
-    const li = e.target.closest('.filter-menu li');
-    if (!li) return;
-
-    e.stopPropagation();
-
-    const menu = li.closest('.filter-menu');
-    if (!menu) return;
-
-    const iconId = menu.dataset.originalIconId;
-
-    // پیدا کردن آیکن که منو بهش تعلق داره
-    const icon = document.querySelector(`.filter-icon[data-icon-id="${iconId}"]`);
-    if (!icon) return;
-
-    // پیدا کردن گرید والد آیکن
-    const gridContainer = icon.closest('.dynamic-grid-container');
-    if (!gridContainer) return;
-
-    const gridName = gridContainer.id; // id همان gridName است
-    const gridState = window.Grids[gridName];
-    if (!gridState) return;
-
-    // تغییر نوع فیلتر و آیکن
-    const filterType = li.dataset.type || 'contains';
-    const selectedIcon = li.dataset.icon || '';
-    icon.textContent = `🔍 ${selectedIcon}`;
-
-    const cell = icon.closest('.grid-cell');
-    if (!cell) return;
-
-    const input = cell.querySelector('.filter-input');
-    if (!input) return;
-
-    input.dataset.filterType = filterType;
-
-    // اجرا fetch فقط برای گرید مربوطه
-    gridState.currentPage = 1;
-    fetchGridData(gridState.currentPage, gridState.pageSize, gridState.customRequestBody, gridName);
-});
-
 // بستن منو وقتی جای دیگه کلیک شد
 document.addEventListener('click', e => {
-    // بررسی اینکه آیا کلیک روی آیکن فیلتر نبوده است
     if (!e.target.closest('.filter-icon')) {
-        // مخفی کردن تمام منوهای فیلتر
         document.querySelectorAll('.filter-menu').forEach(menu => {
             menu.style.display = 'none';
         });
@@ -1297,22 +1466,21 @@ document.addEventListener('click', e => {
 });
 
 // عمليات فوتر گريد جمع ، ميانگين و ...
+document.addEventListener('DOMContentLoaded', () => {
+
 document.querySelectorAll('.dynamic-grid-container').forEach(gridContainer => {
-    // فقط برای گریدهای موجود
     gridContainer.querySelectorAll('.grid-cell[data-footer]').forEach(cell => {
+        debugger
         const input = cell.querySelector('.footer-input');
         const icon = cell.querySelector('.footer-icon');
         const menu = cell.querySelector('.footer-menu');
         const gridWrapper = gridContainer.querySelector("#gridContainerWrapper");
-
-        if (!icon || !menu || !gridWrapper) return;
+        if (!icon || !menu) return; // حذف gridWrapper از شرط
         if (cell.dataset.footer === 'Actions') return;
 
         // مقدار پیش‌فرض calcState
         if (!cell.dataset.calcState) {
             cell.dataset.calcState = 'sum';
-            // ❌ قبل: input.value = `جمع = 0`;
-            // ✅ حالا از original-content استفاده می‌کنیم
             const original = cell.getAttribute('original-content') || '0';
             input.value = `جمع = ${original}`;
         }
@@ -1321,7 +1489,7 @@ document.querySelectorAll('.dynamic-grid-container').forEach(gridContainer => {
         icon.addEventListener('click', e => {
             e.stopPropagation();
 
-            // حذف منوهای باز قبلی (فقط برای همین گرید)
+            // حذف منوهای باز قبلی
             gridContainer.querySelectorAll('.footer-menu.clone').forEach(m => m.remove());
 
             // ساخت clone از منو
@@ -1342,28 +1510,22 @@ document.querySelectorAll('.dynamic-grid-container').forEach(gridContainer => {
             clone.style.transform = 'translateY(5px)';
             document.body.appendChild(clone);
 
-            // محاسبه موقعیت دقیق (بالای آیکون و داخل دید)
-            const wrapperRect = gridWrapper.getBoundingClientRect();
+            // محاسبه موقعیت دقیق
             const iconRect = icon.getBoundingClientRect();
             const popupRect = clone.getBoundingClientRect();
+            const offset = 10;
+            let left = iconRect.right - popupRect.width;
+            let top = iconRect.top - popupRect.height - offset;
 
-            // جهت RTL و باز شدن بالای آیکون
-            const offset = 10; // فاصله از آیکون
-            let left = iconRect.right - popupRect.width; // راست به چپ
-            let top = iconRect.top - popupRect.height - offset; // بالای آیکون
-
-            // جلوگیری از خروج از چپ یا راست
-            if (left < wrapperRect.left + 4) left = wrapperRect.left + 4;
+            // جلوگیری از خروج از viewport
+            if (left < 4) left = 4;
             if (left + popupRect.width > window.innerWidth - 4)
                 left = window.innerWidth - popupRect.width - 4;
-
-            // جلوگیری از خروج از بالا
             if (top < 4) top = iconRect.bottom + offset;
 
             clone.style.left = `${left}px`;
             clone.style.top = `${top}px`;
 
-            // افکت ظاهر شدن
             requestAnimationFrame(() => {
                 clone.style.opacity = '1';
                 clone.style.transform = 'translateY(0)';
@@ -1384,75 +1546,19 @@ document.querySelectorAll('.dynamic-grid-container').forEach(gridContainer => {
                     e.stopPropagation();
                     const calcType = li.dataset.calc;
                     cell.dataset.calcState = calcType;
-
                     updateGridFooters(calcType, cell);
                     clone.remove();
                 });
             });
 
-            // بستن هنگام scroll در gridWrapper
-            gridWrapper.addEventListener('scroll', () => clone.remove(), { once: true });
+            // بستن هنگام scroll
+            if (gridWrapper) {
+                gridWrapper.addEventListener('scroll', () => clone.remove(), { once: true });
+            }
         });
     });
 });
-
-// بروز رساني فوتر گريد 
-function updateGridFooters(calcType = null, targetFooter = null) {
-    // اگر فوتر خاصی ارسال شده باشد، فقط آن را محاسبه می‌کنیم
-    const footers = targetFooter ? [targetFooter] : document.querySelectorAll('[data-footer]');
-
-    footers.forEach(footer => {
-        const field = footer.dataset.footer; // فیلد مربوط به فوتر
-        const calc = calcType || footer.dataset.calcState || 'sum'; // نوع محاسبه
-
-        // برای هر گرید، سلول‌های مرتبط با این فیلد را پیدا می‌کنیم
-        const gridContainer = footer.closest('.dynamic-grid-container');
-        const cells = Array.from(gridContainer.querySelectorAll(`[data-cell="${field}"]`))
-            .filter(c => c.style.display !== 'none') // فقط سلول‌های قابل مشاهده
-            .map(c => {
-                let val = c.textContent.trim();
-
-                // تبدیل اعداد فارسی به انگلیسی
-                val = val.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
-
-                // حذف جداکننده هزارگان
-                val = val.replace(/,/g, '');
-
-                return val;
-            })
-            .filter(v => /^[0-9]+(\.[0-9]+)?$/.test(v)) // فقط اعداد صحیح یا اعشاری
-            .map(Number); // تبدیل به عدد
-
-        const input = footer.querySelector('.footer-input');
-
-        if (cells.length === 0) {
-            input.value = ''; // اگر هیچ مقداری وجود نداشت، ورودی خالی باشد
-            return;
-        }
-
-        // محاسبه نتیجه با توجه به نوع calc
-        let result = 0;
-        switch (calc) {
-            case 'avg': result = cells.reduce((a, b) => a + b, 0) / cells.length; break;
-            case 'count': result = cells.length; break;
-            case 'max': result = Math.max(...cells); break;
-            case 'min': result = Math.min(...cells); break;
-            default: result = cells.reduce((a, b) => a + b, 0); break; // پیش‌فرض جمع
-        }
-
-        // فرمت کردن نتیجه به فرمت عددی فارسی
-        const formatted = result.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
-
-        // قرار دادن نتیجه در ورودی فوتر
-        if (input) {
-            let label = { sum: 'جمع', avg: 'میانگین', count: 'تعداد', max: 'بیشترین', min: 'کمترین' }[calc] || 'جمع';
-            input.value = `${label} = ${formatted}`;
-        }
-
-        // ذخیره نوع محاسبه برای استفاده‌های بعدی
-        footer.dataset.calcState = calc;
-    });
-}
+});
 
 // بستن منو وقتی جای دیگه کلیک شد
 document.addEventListener('click', e => {
@@ -1472,7 +1578,6 @@ document.addEventListener('click', e => {
         });
     }
 });
-
 
 //تغيير عرض ستونهاي گريد
 document.addEventListener("DOMContentLoaded", () => {
@@ -1573,7 +1678,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ///////////////////////////////////////////
 
-
 // لود با اسكرول
 function initLazyLoading(gridName) {
     const gridData = document.querySelector(`#${gridName} #gridData`);
@@ -1601,46 +1705,31 @@ function initLazyLoading(gridName) {
     });
 }
 
+//// تابع فعال‌سازی کلیک برای همه footer-icon ها
+//function initFooterMenuToggle() {
+//    debugger
+//    document.querySelectorAll('.grid-cell').forEach(cell => {
+//        const icon = cell.querySelector('.footer-icon');
+//        const menu = cell.querySelector('.footer-menu');
+//        if (!icon || !menu) return;
 
+//        icon.addEventListener('click', e => {
+//            e.stopPropagation(); // جلوگیری از bubbling
+//            // toggle نمایش منو
+//            if (menu.style.display === 'block') {
+//                menu.style.display = 'none';
+//            } else {
+//                // قبل از باز کردن، همه منوهای باز دیگر را ببندیم
+//                document.querySelectorAll('.footer-menu').forEach(m => m.style.display = 'none');
+//                menu.style.display = 'block';
+//            }
+//        });
+//    });
 
+//    // بستن منو با کلیک بیرون
+//    document.addEventListener('click', () => {
+//        document.querySelectorAll('.footer-menu').forEach(m => m.style.display = 'none');
+//    });
+//}
 
-
-// يوزر استايل row
-function applyStylesToGridRows(styles, condition) {
-    const rows = document.querySelectorAll('.grid-row');
-
-    rows.forEach(row => {
-        let match = true;
-
-        if (condition) {
-            for (const key in condition) {
-                const keyLower = key.toLowerCase(); // ✅ همیشه lowercase
-                // جستجوی سلولی که data-cell برابر با key (بدون حساسیت به حروف) باشد
-                const cell = Array.from(row.querySelectorAll('[data-cell]'))
-                    .find(c => c.dataset.cell.toLowerCase() === keyLower);
-
-                const cellValue = cell ? cell.textContent.trim() : "";
-                const condValue = condition[key];
-
-                if (Array.isArray(condValue)) {
-                    if (!condValue.map(v => v.toString()).includes(cellValue)) {
-                        match = false;
-                        break;
-                    }
-                } else {
-                    if (cellValue !== condValue.toString()) {
-                        match = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!match) return;
-
-        for (const property in styles) {
-            row.style.setProperty(property, styles[property], 'important');
-        }
-    });
-}
 

@@ -29,7 +29,7 @@ namespace YourProject.TagHelpers
                 foreach (var p in type.GetProperties())
                 {
                     var attr = (GridColumnAttribute?)Attribute.GetCustomAttribute(p, typeof(GridColumnAttribute));
-                    string header = attr?.Header ?? p.Name;
+                    string header = attr?.DisplayName ?? p.Name;
                     bool visible = attr?.Visible ?? true;
                     columnMeta.Add((p.Name, header, visible));
                 }
@@ -39,7 +39,7 @@ namespace YourProject.TagHelpers
                 foreach (var p in ModelType.GetProperties())
                 {
                     var attr = (GridColumnAttribute?)Attribute.GetCustomAttribute(p, typeof(GridColumnAttribute));
-                    string header = attr?.Header ?? p.Name;
+                    string header = attr?.DisplayName ?? p.Name;
                     bool visible = attr?.Visible ?? true;
                     columnMeta.Add((p.Name, header, visible));
                 }

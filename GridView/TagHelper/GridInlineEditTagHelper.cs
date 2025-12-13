@@ -38,7 +38,7 @@ namespace YourProject.TagHelpers
                     columnMeta.Add(new
                     {
                         Name = prop.Name, // بدون تغییر به camelCase
-                        Header = attr?.Header ?? prop.Name,
+                        Header = attr?.DisplayName ?? prop.Name,
                         Visible = attr?.Visible ?? true,
                         Editable = attr?.Editable ?? false
                     });

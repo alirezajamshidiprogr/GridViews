@@ -1,7 +1,7 @@
 ﻿[AttributeUsage(AttributeTargets.Property)]
 public class GridColumnAttribute : Attribute
 {
-    public string Header { get; }
+    public string DisplayName { get; }
     public bool Editable { get; set; }
     public bool FirstDisplay { get; set; } = true;
     public bool Visible { get; } // نمايش يا عدم نمايش ستون
@@ -10,7 +10,7 @@ public class GridColumnAttribute : Attribute
     public bool EnableGrouping { get; set; } = true;  // گروه بندي داشته باشه يا نه 
     public GridColumnAttribute(string displayName, bool visible = true, bool editable = false,bool filtering = true, bool sorting = true, bool grouping = true ,bool firstDisplay = true)
     {
-        Header = displayName;
+        DisplayName = displayName;
         Visible = visible;
         Visible = visible;
         Editable = editable;

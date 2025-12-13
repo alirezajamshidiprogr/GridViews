@@ -7,6 +7,7 @@
         public int PageSize { get; set; }
         public List<T> Items { get; set; } = new();
         public string? GroupBy { get; set; }
+        public bool enableLazyLoading { get; set; } = false; 
         public List<GridGroupDto<T>>? Groups { get; set; }
     }
 

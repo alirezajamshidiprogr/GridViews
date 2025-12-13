@@ -162,12 +162,12 @@ namespace GridView.TagHelpers
                 html += $"<div class='col-1' id='grd-pageSizeSelector'>" +
                    $"<label>تعداد در هر صفحه:" +
                    $"<select id='pageSizeSelector'>" +
-                   $"<option value='5' {(_pageSize == 5 ? "selected" : "")}>5</option>" +
-                   $"<option value='10' {(_pageSize == 10 ? "selected" : "")}>10</option>" +
-                   $"<option value='15' {(_pageSize == 15 ? "selected" : "")}>15</option>" +
-                   $"<option value='20' {(_pageSize == 20 ? "selected" : "")}>20</option>" +
-                   $"<option value='25' {(_pageSize == 25 ? "selected" : "")}>25</option>" +
-                   $"<option value='30' {(_pageSize == 30 ? "selected" : "")}>30</option>" +
+                   $"<option value='5' {((_pageSize == 5 && !_enableLazyLoading)? "selected" : "")}>5</option>" +
+                   $"<option value='10' {((_pageSize == 10 && !_enableLazyLoading )? "selected" : "")}>10</option>" +
+                   $"<option value='15' {((_pageSize == 15 && !_enableLazyLoading )? "selected" : "")}>15</option>" +
+                   $"<option value='20' {((_pageSize == 20 && !_enableLazyLoading )? "selected" : "")}>20</option>" +
+                   $"<option value='25' {(_pageSize == 25 || _enableLazyLoading ? "selected" : "")}>25</option>" +
+                   $"<option value='30' {((_pageSize == 30 && !_enableLazyLoading) ? "selected" : "")}>30</option>" +
                    $"</select>" +
                    $"</label></div>";
             }
@@ -199,7 +199,7 @@ namespace GridView.TagHelpers
 
                     foreach (var col in groupableColumns)
                     {
-                        var header = col.Attr.Header ?? col.Prop.Name;
+                        var header = col.Attr.DisplayName ?? col.Prop.Name;
                         html += $"<option value='{col.Prop.Name}'>{header}</option>";
                     }
 
@@ -273,7 +273,7 @@ namespace GridView.TagHelpers
                 foreach (var col in columnsMeta.Where(c => c.Attr.EnableFiltering))
                 {
                     string fieldName = col.Prop.Name;
-                    string header = col.Attr.Header ?? fieldName;
+                    string header = col.Attr.DisplayName ?? fieldName;
 
                     html += $@"
         <div class='filter-row' style='margin-bottom:12px;display:flex;flex-direction:column;'>
@@ -309,7 +309,7 @@ namespace GridView.TagHelpers
                 var style = col.Attr.Visible ? "" : "style='display:none;'";
                 var className = col.Attr.Visible ? "grid-cell" : "grid-cell grid-cell-hidden";
                 var sortIcons = (_enableSorting.HasValue && _enableSorting.Value) && col.Attr.EnableSorting ? "  <i class='fa fa-sort' style='margin-left: 7px;'> </i> " : "";
-                html += $"<div class='{className}' {style} data-column='{col.Prop.Name}'>{sortIcons} {col.Attr.Header}</div>";
+                html += $"<div class='{className}' {style} data-column='{col.Prop.Name}'>{sortIcons} {col.Attr.DisplayName}</div>";
             }
 
            
@@ -443,7 +443,7 @@ namespace GridView.TagHelpers
                 return new
                 {
                     prop = p.Name,
-                    header = attr?.Header ?? p.Name,
+                    header = attr?.DisplayName ?? p.Name,
                     visible = attr?.Visible ?? true,
                     filtering = attr?.EnableFiltering ?? true,
                     sorting = attr?.EnableSorting ?? true,
@@ -493,7 +493,7 @@ namespace GridView.TagHelpers
                         customRequestBody: {{}}
                     }};
 
-                    console.log('Grid ""{_gridName}"" initialized:', window.Grids['{_gridName}']);
+                    
                 </script>";
 
 

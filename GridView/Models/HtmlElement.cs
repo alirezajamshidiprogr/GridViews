@@ -265,12 +265,25 @@
         public string Type { get; set; } = "button";
         public string Text { get; set; } = "Button";
         public string OnClick { get; set; } = "";
+        // آیکن دلخواه مثل: "fa fa-save" یا "<i class='fa fa-plus'></i>"
+        public string Icon { get; set; } = "";
 
         protected override string RenderElementHtml()
         {
             string cls = string.IsNullOrWhiteSpace(Class) ? "btn btn-primary" : Class;
             string onclickAttr = string.IsNullOrWhiteSpace(OnClick) ? "" : $"onclick='{OnClick}'";
-            return $"<button id='{Id}' type='{Type}' class='{cls}' {onclickAttr}>{Text}</button>";
+
+            string iconHtml = "";
+            if (!string.IsNullOrWhiteSpace(Icon))
+            {
+                // اگر فقط کلاس آیکن فرستاده شود
+                if (!Icon.Trim().StartsWith("<"))
+                    iconHtml = $"<i class='{Icon}'></i> ";
+                else
+                    iconHtml = Icon + " ";
+            }
+
+            return $"<button id='{Id}' type='{Type}' class='{cls}' {onclickAttr}>{iconHtml}{Text}</button>";
         }
     }
 
