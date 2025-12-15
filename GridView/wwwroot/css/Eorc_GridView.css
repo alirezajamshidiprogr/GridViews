@@ -5,14 +5,142 @@
     font-style: normal;
 }
 
-/*body {
-    font-family: "Vazirmatn", sans-serif;
+/*Style for Grid Popups Makers */
+.gridPopupBtnApplyGrid {
+    background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
+    color: #fff !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    gap: 5px;
+}
+
+    .gridPopupBtnApplyGrid:hover {
+        background: linear-gradient(135deg,#0056b3,#003f7f) !important;
+        transform: scale(1.05);
+    }
+
+.gridPopupBtnCancelGrid {
+    background: linear-gradient(135deg, rgb(220, 53, 69), rgb(179, 0, 0)) !important;
+    color: #fff !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .gridPopupBtnCancelGrid:hover {
+        background: linear-gradient(135deg, rgb(200, 35, 51), rgb(150, 0, 0)) !important;
+        transform: scale(1.05);
+    }
+
+[data-eorc-grid-popup] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: 90vw;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    z-index: 99999;
     padding: 20px;
-    background-color: #f4f4f4;
+    font-family: 'vazir-light', sans-serif;
+    color: #333333;
+    animation: fadeIn 0.3s ease-in-out;
+    direction: rtl;
+}
 
-}*/
+/* هدر */
+    [data-eorc-grid-popup] h3 {
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1976D2;
+        text-align: center;
+    }
 
-.grid-container .grid-body {
+/* شبکه ستون‌ها */
+    [data-eorc-grid-popup] div.grid-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+/* برچسب و چک‌باکس */
+    [data-eorc-grid-popup] label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    [data-eorc-grid-popup] input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #1976D2;
+    }
+
+/* دکمه‌ها */
+    [data-eorc-grid-popup] button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    [data-eorc-grid-popup] #confirmPdf {
+        background-color: #1976D2;
+        color: #fff;
+    }
+
+        [data-eorc-grid-popup] #confirmPdf:hover {
+            background-color: #115293;
+        }
+
+    [data-eorc-grid-popup] #cancelPdf {
+        background-color: #e0e0e0;
+        color: #333;
+        margin-left: 10px;
+    }
+
+        [data-eorc-grid-popup] #cancelPdf:hover {
+            background-color: #bdbdbd;
+        }
+
+    [data-eorc-grid-popup] button.close-btn {
+        background: linear-gradient(135deg,#007bff,#0056b3);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: block;
+        margin: 20px auto 0 auto;
+    }
+
+        [data-eorc-grid-popup] button.close-btn:hover {
+            background: linear-gradient(135deg,#0056b3,#003f7f);
+        }
+
+/* انیمیشن محو شدن */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -55%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+
+
+.eorc-grid-container .grid-body {
     flex: 1 1 auto; /* فضای باقی‌مانده رو بگیره */
     overflow-y: auto; /* اسکرول عمودی فقط این بخش */
     display: flex;
@@ -52,7 +180,7 @@
 
 
 
-.dynamic-grid-container {
+.eorc-dynamic-grid-container {
     display: flex;
     flex-direction: column;
     font-family: 'vazir-light', sans-serif;
@@ -66,11 +194,11 @@
 }
 
 
-#gridContainer,
-#gridContainer.grid-header,
-#gridContainer.grid-body.grid-row.grid-cell,
-#gridContainer.grid-filters,
-#gridContainer.grid-body {
+.gridContainerWrapper,
+.gridContainerWrapper.grid-header,
+.gridContainerWrapper.grid-body.grid-row.grid-cell,
+.gridContainerWrapper.grid-filters,
+.gridContainerWrapper.grid-body {
     font-family: 'vazir-light', sans-serif;
     font-size: 13px;
     direction: rtl; 
@@ -86,21 +214,14 @@
     /*width: max-content !important;*/ /* اجازه اسکرول افقی */
 }
 
-#gridContainerWrapper .grid-container {
+.gridContainerWrapper .eorc-grid-container {
     overflow: visible !important;
     width: max-content;
     min-width: 100%;
     display: block;
-   /* display: flex;
-    flex-direction: column;
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #fff;*/
 }
 
-#gridContainer .grid-header .grid-cell {
+.gridContainerWrapper .grid-header .grid-cell {
     border-left: 1px solid #e1e1e1;
     border-bottom: none !important;
     text-align: center;
@@ -111,7 +232,7 @@
     transition: background-color 0.3s ease;
 }
 
-#gridContainerWrapper .grid-container .grid-header {
+.gridContainerWrapper .eorc-grid-container .grid-header {
     font-weight: bold;
     background: #3498db;
     color: #fff;
@@ -148,23 +269,23 @@
 }
 
 
-#gridContainerWrapper .grid-container .grid-filters {
+.gridContainerWrapper .eorc-grid-container .grid-filters {
     display: flex;
     min-width: max-content;
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #f4f6f9; 
+    background: #f4f6f9;
     font-size: 13px;
     min-width: max-content;
     position: sticky;
-    top: 0; 
+    top: 0;
     z-index: 2;
     color: #fff;
 }
 
 
-    #gridContainerWrapper .grid-container .grid-filters input.filter-input {
+    .gridContainerWrapper .eorc-grid-container .grid-filters input.filter-input {
         width: 142px;
         box-sizing: border-box;
         padding: 4px 6px;
@@ -179,21 +300,18 @@
 }
 
 
-#gridContainerWrapper .controls {
-    padding:15px;
-    margin-bottom:15px;
-    font-size:13px;
-    background:#fff;
+.gridContainerWrapper .controls {
+    padding: 15px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    background: #fff;
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
     flex-wrap: wrap;
-    /*background: linear-gradient(135deg, rgb(240, 247, 255), rgb(249, 252, 255)) !important;*/
     display: flex;
     align-items: center;
-    /*justify-content: space-between;*/
     padding: 8px 16px;
-    /*background: #f0f4f8;*/
     border-radius: 12px;
     color: #0a334f;
     font-family: 'vazir-light', sans-serif;
@@ -202,7 +320,7 @@
     transition: background 0.3s ease;
 }
 
-.grid-container .grid-body .grid-row .grid-cell .btn {
+.eorc-grid-container .grid-body .grid-row .grid-cell .btn {
     padding: 4px 8px;
     border-radius: 4px;
     border: none;
@@ -210,33 +328,33 @@
     font-size: 13px !important;
 }
 
-.grid-container .grid-body .grid-row .grid-cell-Buttons{
-    gap:5px;
+.eorc-grid-container .grid-body .grid-row .grid-cell-Buttons {
+    gap: 5px;
 }
-    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary {
+    .eorc-grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary {
         background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
         color: #fff !important;
         transition: background-color 0.3s ease, transform 0.2s ease;
         gap: 5px;
     }
 
-    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary:hover {
-        background: linear-gradient(135deg,#0056b3,#003f7f) !important;
-        transform: scale(1.05);
+        .eorc-grid-container .grid-body .grid-row .grid-cell-Buttons .btn.primary:hover {
+            background: linear-gradient(135deg,#0056b3,#003f7f) !important;
+            transform: scale(1.05);
+        }
+
+    .eorc-grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger {
+        background: linear-gradient(135deg, rgb(220, 53, 69), rgb(179, 0, 0)) !important;
+        color: #fff !important;
+        transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
-.grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger {
-    background: linear-gradient(135deg, rgb(220, 53, 69), rgb(179, 0, 0)) !important;
-    color: #fff !important;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
+        .eorc-grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger:hover {
+            background: linear-gradient(135deg, rgb(200, 35, 51), rgb(150, 0, 0)) !important;
+            transform: scale(1.05);
+        }
 
-    .grid-container .grid-body .grid-row .grid-cell-Buttons .btn.danger:hover {
-        background: linear-gradient(135deg, rgb(200, 35, 51), rgb(150, 0, 0)) !important;
-        transform: scale(1.05);
-    }
-
-.dynamic-grid-container .pagination {
+.eorc-dynamic-grid-container .pagination {
     background: linear-gradient(135deg, rgb(0, 123, 255), rgb(0, 86, 179)) !important;
     display: flex;
     align-items: center;
@@ -251,14 +369,14 @@
     transition: background 0.3s ease;
 }
 
-    .dynamic-grid-container .pagination label {
+    .eorc-dynamic-grid-container .pagination label {
         font-size: 13px;
         display: flex;
         align-items: center;
         gap: 6px;
     }
 
-    .dynamic-grid-container .pagination select {
+    .eorc-dynamic-grid-container .pagination select {
         padding: 4px 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
@@ -269,11 +387,11 @@
         color: #3498db;
     }
 
-        .dynamic-grid-container .pagination select:hover {
+        .eorc-dynamic-grid-container .pagination select:hover {
             background: #f0f4f8;
         }
 
-    .dynamic-grid-container .pagination .pagination-btn {
+    .eorc-dynamic-grid-container .pagination .pagination-btn {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -289,12 +407,12 @@
         transition: all 0.2s ease;
     }
 
-        .dynamic-grid-container .pagination .pagination-btn:hover {
+        .eorc-dynamic-grid-container .pagination .pagination-btn:hover {
             background: #042337;
             transform: translateY(-1px);
         }
 
-    .dynamic-grid-container .pagination #pageInfo {
+    .eorc-dynamic-grid-container .pagination #pageInfo {
         font-size: 14px;
         font-weight: bold;
         padding: 4px 8px;
@@ -303,41 +421,39 @@
         color: #fff;
     }
 
-.grid-container .grid-body .grid-row:nth-child(even) {
+.eorc-grid-container .grid-body .grid-row:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-.grid-container .grid-body .grid-row:nth-child(odd) {
+.eorc-grid-container .grid-body .grid-row:nth-child(odd) {
     background-color: #ffffff;
 }
 
-.grid-container .grid-body .grid-row:hover {
+.eorc-grid-container .grid-body .grid-row:hover {
     background-color: #d6eaf8;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.dynamic-grid-container #gridContainerWrapper {
+.eorc-dynamic-grid-container .gridContainerWrapper {
     overflow-x: auto;
 }
-
-
 
 .grid-body .grid-row {
     display: flex;
     min-width: max-content;
 }
 
-.grid-container .grid-footer .footer-row {
+.eorc-grid-container .grid-footer .footer-row {
     display: flex;
     min-width: max-content;
 }
 
-.grid-container .footer-row .grid-cell {
-    position: relative; 
+.eorc-grid-container .footer-row .grid-cell {
+    position: relative;
 }
 
-.filter-icon {
+.eorc-grid-container .grid-filters .grid-cell .filter-icon {
     position: absolute;
     right: 18px;
     top: 50%;
@@ -348,7 +464,7 @@
     font-size: 17px;
 }
 
-.filter-menu {
+.eorc-grid-filter-menu {
     top: calc(100% + 4px);
     display: none; /* نمایش با JS */
     position: absolute;
@@ -368,7 +484,7 @@
     transition: all 0.2s ease;
 }
 
-    .filter-menu li {
+    .eorc-grid-filter-menu li {
         padding: 8px 12px;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -376,19 +492,19 @@
         position: relative;
     }
 
-        .filter-menu li:hover {
+        .eorc-grid-filter-menu li:hover {
             background: #f0f4ff; /* رنگ ملایم برای هاور */
             transform: translateX(3px); /* انیمیشن کوچک */
             box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
         }
 
 
-        .filter-menu li:active {
+        .eorc-grid-filter-menu li:active {
             background: #dbe4ff; /* هاور فشار داده شده */
             transform: translateX(1px);
         }
 
-        .filter-menu li::before {
+        .eorc-grid-filter-menu li::before {
             content: attr(data-icon);
             display: inline-block;
             width: 22px;
@@ -422,7 +538,7 @@
         text-decoration: underline;
     }
 
-    .grid-footer .footer-row .grid-cell[data-footer] .footer-icon {
+    .eorc-grid-container .grid-footer .footer-row .grid-cell[data-footer] .footer-icon {
         position: absolute;
         right: 11%;
         top: 50%;
@@ -433,7 +549,7 @@
         font-size: 17px;
     }
 
-.footer-menu {
+.eorc-grid-footer-menu {
     top: calc(100% + 4px);
     display: none; /* نمایش با JS */
     position: absolute;
@@ -453,7 +569,7 @@
     transition: all 0.2s ease;
 }
 
-    .footer-menu li {
+    .eorc-grid-footer-menu li {
         padding: 8px 12px;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -461,7 +577,7 @@
         position: relative;
     }
 
-        .footer-menu li:hover {
+        .eorc-grid-footer-menu li:hover {
             background: #f0f4ff; /* رنگ ملایم برای هاور */
             transform: translateX(3px); /* انیمیشن کوچک */
             box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
@@ -474,165 +590,14 @@ select option {
     direction: rtl;
 }
 
-
-
-#columnSelectorPopup {
-    position: fixed;
-    top: 34%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #ffffff;
-    border: 2px solid #4a90e2;
-    padding: 25px 30px;
-    direction: rtl;
-    z-index: 99999;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-    border-radius: 16px;
-    font-family: 'vazir-light', sans-serif;
-    width: 947px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-    /* افکت باز شدن */
-    #columnSelectorPopup.show {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
-
-    /* عنوان پاپ‌آپ */
-    #columnSelectorPopup h3 {
-        margin-bottom: 20px;
-        font-size: 18px;
-        color: #333;
-        text-align: center;
-    }
-
-    /* لیبل‌های چک‌باکس */
-    #columnSelectorPopup label {
-        display: block;
-        font-size: 14px;
-        cursor: pointer;
-        margin-bottom: 8px;
-        padding: 6px 10px;
-        border-radius: 6px;
-        transition: background 0.2s ease;
-    }
-
-        #columnSelectorPopup label:hover {
-            background: #f0f8ff; 
-        }
-
-    /* چک‌باکس */
-    #columnSelectorPopup input[type="checkbox"] {
-        margin-left: 8px;
-        transform: scale(1.1);
-    }
-
-    /* کانتینر دکمه‌ها */
-    #columnSelectorPopup .button-container {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    /* دکمه‌ها */
-    #columnSelectorPopup button {
-        padding: 10px 22px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.2s ease, transform 0.1s ease;
-        background: linear-gradient(135deg,#007bff,#0056b3);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 20px auto 0 auto;
-    }
-
-    #columnSelectorPopup #confirmPrint {
-        background-color: #4a90e2;
-        color: white;
-    }
-
-        #columnSelectorPopup #confirmPrint:hover {
-            background-color: #357ABD;
-            transform: translateY(-1px);
-        }
-
-    #columnSelectorPopup #cancelPrint {
-        font-size: 14px;
-        transition: background 0.2s ease, transform 0.1s ease;
-        background: linear-gradient(135deg,#007bff,#0056b3);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 20px auto 0 auto;
-    }
-
-        #columnSelectorPopup #cancelPrint:hover {
-            background-color: #aaa;
-            transform: translateY(-1px);
-        }
-
-    #columnSelectorPopup::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #columnSelectorPopup::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 3px;
-    }
-
-
-#rowDetailsPopup div span:first-child {
-    min-width: 120px;
-}
-
-/* ======= Row Detail Popup ======= */
-#rowDetailPopup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-    padding: 30px 35px;
-    width: 86%;
-    max-height: 93vh;
-    overflow-y: auto;
-    direction: rtl;
-    z-index: 999999;
-    font-family: 'vazir-light', Tahoma, sans-serif;
-    opacity: 0;
-    transition: all 0.25s ease;
-}
-#pdfSelectorPopup {
-    direction: rtl;
-    width: auto;
-    padding: 51px;
-}
-
-.details-container {
+[data-eorc-grid-popup] .details-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* سه ستون */
     gap: 12px;
     margin-top: 10px;
 }
 
-.detail-row {
+[data-eorc-grid-popup] .details-container .detail-row {
     background: #f7f7f7;
     padding: 10px;
     border-radius: 6px;
@@ -641,81 +606,16 @@ select option {
     gap: 4px;
 }
 
-    .detail-row .label {
-        font-weight: bold;
-        color: #444;
-    }
+[data-eorc-grid-popup] .details-container .detail-row .label {
+    font-weight: bold;
+    color: #444;
+}
 
-    /* افکت ورود نرم */
-    #rowDetailPopup.show {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* عنوان پاپ‌آپ */
-    #rowDetailPopup h3 {
-        text-align: center;
-        margin: 0 0 20px 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #007bff;
-        border-bottom: 2px solid #007bff33;
-        padding-bottom: 10px;
-    }
-
-    #rowDetailPopup .detail-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #e0e0e0;
-        line-height: 1.8;
-    }
-
-        #rowDetailPopup .detail-row .label {
-            font-weight: 600;
-            color: #007bff;
-        }
-
-        #rowDetailPopup .detail-row .value {
-            color: #444;
-            text-align: center;
-            direction: ltr;
-        }
-
-    #rowDetailPopup button.close-btn {
-        background: linear-gradient(135deg,#007bff,#0056b3);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: block;
-        margin: 20px auto 0 auto;
-    }
-
-        #rowDetailPopup button.close-btn:hover {
-            background: linear-gradient(135deg,#0056b3,#003f7f);
-        }
-
-    #rowDetailPopup::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    #rowDetailPopup::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 4px;
-    }
-
-        #rowDetailPopup::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
+  
 
 
 /* قرار بده در css اصلی یا داخل <style> */
-#gridContainerWrapper .controls-bar .full-width-btn {
+.gridContainerWrapper .controls-bar .full-width-btn {
     display: block !important;
     width: 100% !important;
     box-sizing: border-box;
@@ -726,23 +626,23 @@ select option {
 
 
 /* استایل ردیف‌های انتخاب شده */
-.grid-row.selected {
+.gridContainerWrapper .eorc-grid-container .grid-body .grid-row.selected {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
-    background-color: #fff7e0 !important;
+    background-color: #b5dcf1 !important;
     color: #150fc4 !important;
     font-weight: bold;
 }
 
 /* وقتی موس روی ردیف هست */
-.grid-row:hover {
+.gridContainerWrapper .eorc-grid-container .grid-body .grid-row:hover {
     background-color: #f1f1f1; /* رنگ خاکی ملایم */
     transition: background-color 0.3s ease;
 }
 
 /* ردیف‌های معمولی (غیر انتخاب شده) */
-.grid-row {
+.gridContainerWrapper .eorc-grid-container .grid-body .grid-row {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -767,7 +667,7 @@ select option {
 }
 
 /* دکمه */
-.grid-print-btn {
+.grid-action-button-class {
     background-color: #3498db;
     color: white;
     border: none;
@@ -784,85 +684,13 @@ select option {
     box-sizing: border-box; /* padding داخل عرض حساب شود */
 }
 
-    .grid-print-btn:hover {
+    .grid-action-button-class:hover {
         background-color: #2571a4;
     }
 
-    .grid-print-btn i {
+    .grid-action-button-class i {
         font-size: 20px;
     }
-
-.advanced-filter-popup, columnSelectorPopup {
-    position: fixed; /* روی صفحه ثابت باشد */
-    top: 50%; /* وسط عمودی */
-    left: 50%; /* وسط افقی */
-    transform: translate(-50%, -50%); /* مرکز دقیق */
-    width: 600px; /* عرض بیشتر */
-    max-width: 90vw; /* حداکثر 90 درصد عرض صفحه */
-    min-width: 400px; /* حداقل عرض */
-    max-height: 80vh; /* ارتفاع حداکثر 80 درصد صفحه */
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 12px;
-    overflow-y: auto; /* اسکرول عمودی اگر محتوا زیاد بود */
-    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    z-index: 9999;
-    font-family: 'vazir-light', sans-serif;
-}
-
-
-/* ردیف فیلدها */
-.advanced-filter-popup .filter-row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 8px;
-}
-
-#advancedFilterPopup .popup-header span {
-    margin-left: 8px;
-    font-size: 22px;
-}
-        /* div داخل فیلدها */
-        .advanced-filter-popup .filter-row > div {
-            display: flex;
-            gap: 8px; /* فاصله بیشتر بین inputها */
-        }
-
-    /* ورودی‌ها */
-    .advanced-filter-popup input.form-control {
-        flex: 1;
-        padding: 6px 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
-    /* دکمه‌ها */
-    .advanced-filter-popup button {
-        padding: 6px 12px;
-        margin-top: 8px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-    }
-
-        .advanced-filter-popup button.btn-primary {
-            background-color: #3498db;
-            color: #fff;
-        }
-
-            .advanced-filter-popup button.btn-primary:hover {
-                background-color: #3498db;
-            }
-
-        .advanced-filter-popup button.btn-secondary {
-            background-color: #3498db;
-            color: #fff;
-        }
-
-            .advanced-filter-popup button.btn-secondary:hover {
-                background-color: #3498db;
-            }
 
 .alert.alert-danger {
     direction: rtl;
@@ -871,14 +699,58 @@ select option {
 }
 
 
-.grid-container .grid-group-container {
+[data-eorc-grid-waiter] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+}
+
+.eorc-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 8px;
+}
+
+.waiter-text {
+    font-weight: bold;
+    font-family: 'vazir-light';
+    direction:rtl;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+.eorc-grid-container .grid-group-container {
     margin-bottom: 6px;
     border: 1px solid #eee;
     border-radius: 6px;
     overflow: hidden;
 }
 
-#gridContainerWrapper .grid-container .grid-group-header {
+.gridContainerWrapper .eorc-grid-container .grid-group-header {
     background: linear-gradient(to left, #f0f4ff, #ffffff);
     padding: 6px 10px;
     font-weight: bold;
@@ -888,7 +760,7 @@ select option {
     font-size: 1.2em;
 }
 
-.grid-container .grid-group-container .grid-group-rows .grid-row {
+.eorc-grid-container .grid-group-container .grid-group-rows .grid-row {
     display: flex;
     padding: 4px 10px;
     border-bottom: 1px solid #eee;
@@ -902,7 +774,7 @@ select option {
     box-shadow: 0 0 0 0.15rem rgba(37,132,251,0.4);
 }
 
-/* Modal content */
+/* Modal content Styles  */
 .Eorc_Modal .modal-dialog .modal-content {
     border-radius: 12px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -978,6 +850,7 @@ select option {
         font-size: 0.95rem;
         color: #333;
     }
+
 
 /* Form elements */
 .form-control, .form-select, .form-check-input {

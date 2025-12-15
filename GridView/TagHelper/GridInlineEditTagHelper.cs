@@ -20,7 +20,7 @@ namespace YourProject.TagHelpers
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            output.Attributes.SetAttribute("class", "dynamic-grid-container");
+            output.Attributes.SetAttribute("class", "eorc-dynamic-grid-container");
             output.Attributes.SetAttribute("fetch-url", FetchUrl);
 
             var columnMeta = new List<object>();

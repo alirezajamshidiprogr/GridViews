@@ -71,8 +71,9 @@
                 .EnableInlineEdit(true) // فعال سازي ويرايش داخل گريد فعلا غير فعال است
                 .EnableShowHiddenColumns(true) // نمايش دكمه براي مخفي يا نمايش ستون هاي گريد
                 .EditJavaScriptFunction("OpenModalSearch()") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
+                @*.EditJavaScriptFunction("InsUpd_grdProduct1_Item(this)") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)*@
                 .DeleteJavaScriptFunction("CloseModalSearch()")// تابع جاوا اسكريپت براي حذف (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
-                .AddCustomHtml("<button class='grid-print-btn' onclick='openFilterPopup()'>style</button>")// افزودن المان هاي اچ تي ام ال سفارشي 
+            .AddCustomHtml("<button class='grid-action-button-class' onclick='openFilterPopup()'>style</button>")// افزودن المان هاي اچ تي ام ال سفارشي
                 .Build() // اين خط لازم است 
         )
 

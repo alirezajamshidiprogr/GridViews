@@ -19,7 +19,7 @@ namespace YourProject.TagHelpers
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             output.TagName = "div";
-            output.Attributes.SetAttribute("class", "dynamic-grid-container");
+            output.Attributes.SetAttribute("class", "eorc-dynamic-grid-container");
 
             var columnMeta = new List<(string Name, string Header, bool Visible)>();
 

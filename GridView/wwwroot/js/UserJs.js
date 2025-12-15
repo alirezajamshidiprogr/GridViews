@@ -57,6 +57,7 @@
 function InsUpd_grdProduct1_Item(btn) {
     debugger
     var id = getGridDataCell(btn, 'ID');
+    alert(id);
     // و ادامه كدهاي خودتون
 }
 
