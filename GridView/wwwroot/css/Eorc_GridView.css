@@ -45,6 +45,7 @@
     color: #333333;
     animation: fadeIn 0.3s ease-in-out;
     direction: rtl;
+    text-align:right;
 }
 
 /* هدر */

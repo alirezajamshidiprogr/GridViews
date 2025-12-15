@@ -306,6 +306,7 @@ function enableRowDetailsPopup() {
 
 /// نمايش يا عدم نمايش ستون هاي گريد 
 function displayGridColumns(gridId) {
+    debugger
     const popupId = `${gridId}_columnSelectorPopup`;
     $('#' + popupId).remove();
 

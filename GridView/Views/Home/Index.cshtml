@@ -1,0 +1,43 @@
+﻿    <style>
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .link-btn {
+            display: inline-block;
+            margin: 10px 20px;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .link-btn.store {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+        }
+
+        .link-btn.store:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .link-btn.codefirst {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        }
+
+        .link-btn.codefirst:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+
+    <div class="container">
+        <h1>صفحه انتخاب مسیر</h1>
+        <a href="/Home/IndexStoreProcedure" class="link-btn store">Store Procedure</a>
+        <a href="/Home/IndexStoreProcedureCodeFirst" class="link-btn codefirst">Code First</a>
+    </div>
+

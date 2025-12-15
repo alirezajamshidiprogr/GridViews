@@ -48,11 +48,11 @@
 
 
         @{
-            var model = new List<ProductSaleModel>();  // مدل دلخواه شما طبق فرمت گريد 
-            var gridUrl1 = Url.Action("GetGridViewData1", "Home"); // اكشن و كنترلر شما 
+    var model = new List<ProductSaleDto>();  // مدل دلخواه شما طبق فرمت گريد
+    var gridUrl1 = Url.Action("GetGridViewDataByCodeFirst", "Home"); // اكشن و كنترلر شما
         }
         @(
-                Eorc_Grid<ProductSaleModel>("grdProduct1") // نام گريد شما 
+            Eorc_Grid<ProductSaleDto>("grdProduct2") // نام گريد شما
                 .Url(gridUrl1)
                 .Items(model.Cast<object>().ToList()) // اين خط الزامي است
                 .PageSize(25) // پيج سايز اوليه

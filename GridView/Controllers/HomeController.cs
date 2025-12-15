@@ -16,13 +16,22 @@ namespace GridView.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index_GridWith_Filter_Sort_Paging_Grouping()
+        public IActionResult Index()
         {
-            return View("Index_GridWith_Filter_Sort_Paging_Grouping");
+            return View();
+        }
+        public IActionResult IndexStoreProcedure()
+        {
+            return View("IndexStoreProcedure");
+        } 
+        
+        public IActionResult IndexStoreProcedureCodeFirst()
+        {
+            return View("IndexStoreProcedureCodeFirst");
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetGridViewData1()
+        public async Task<IActionResult> GetGridViewData_WithStoreProcedure()
         {
             // در صورتي كه در گريد در body مقداري  هست بخوان 
             var requestDto = await GridExtensions.ReadRequestBodyAsync<CustomGridRequestDto>(Request);
@@ -54,7 +63,7 @@ namespace GridView.Controllers
                     UnitPrice = ps.UnitPrice,
                     Quantity = ps.Quantity,
                     TotalPrice = ps.TotalPrice,
-                    SaleDate = ps.SaleDate,
+                    SaleDate = ps.SaleDate.Date,
                     PaymentMethod = ps.PaymentMethod,
 
                     ProductId = ps.ProductId,

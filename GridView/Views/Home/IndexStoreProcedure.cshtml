@@ -1,0 +1,119 @@
+﻿@using GeneralModal.Models;
+@using GeneralModal.TagHelper;
+@using GridView.Enums;
+@using GridView.ViewModel;
+@using GridView.TagHelpers
+@using static GridView.TagHelpers.DynamicGridExtensions
+
+
+
+@{
+    var modal = new GenericModalBuilder("myModal")
+        .Title("مدال نمونه")
+        .HeaderHtml("<h5 class='modal-title'>عنوان دلخواه هدر</h5>")
+        .Size(ModalSize.ExtraExtraLarge)
+        .Columns(3)
+        .EnableValidation(true)
+        .BodyHtml(
+            new TextBox { Id = "txtName", LabelText = "نام ", Class = "form-control", Placeholder = "نام خود را وارد کنید", Required = true, MinLength = 3, MaxLength = 50, ValidationMessage = "نام باید بین 3 تا 50 کاراکتر باشد." },
+            new TextBox { Id = "txtFamily", LabelText = "فاميلي ", Class = "form-control", Placeholder = "فاميلي خود را وارد کنید", Required = true, MinLength = 3, MaxLength = 50, ValidationMessage = "نام باید بین 3 تا 50 کاراکتر باشد." },
+            new TextBox { Id = "txtEmail", LabelText = "ايميل ",  Class = "form-control", Placeholder = "ایمیل خود را وارد کنید", Required = true, Pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$", ValidationMessage = "ایمیل نامعتبر است." },
+            new PasswordBox { Id = "txtPassword", LabelText = "رمز عبور", Class = "form-control", Placeholder = "رمز عبور", Required = true, MinLength = 6, ValidationMessage = "رمز عبور حداقل 6 کاراکتر باشد." },
+            new CheckBox { Id = "chkAgree", Value = "غير فعال", LabelText = "وضعيت", Class = "form-check-input", Required = true, ValidationMessage = "باید تیک توافق را بزنید." },
+            new Select { Id = "status", Name = "status", LabelText = "وضعیت", Required = true, Items = new List<ListItem> { new ListItem("1", "فعال"), new ListItem("0", "غیرفعال") }, SelectedValues = new List<string> { "1" } },
+            new MultiSelect { Id = "multiSelectRoles", Name = "roles", LabelText = "نقش‌ها", Required = true, Items = new List<ListItem> { new ListItem("admin", "مدیر"), new ListItem("editor", "ویراستار"), new ListItem("user", "کاربر عادی") }, SelectedValues = new List<string> { "user", "editor" }, UseSelect2 = true },
+            new MultiSelectSelect2
+                    {
+                        Id = "multiSelectRolesSelect2",
+                        Name = "rolesSelect2",
+                        LabelText = "نقش‌ها (Select2)",
+                        Required = true,
+                        Items = new List<ListItem> {
+                    new ListItem("admin", "مدیر"),
+                    new ListItem("editor", "ویراستار"),
+                    new ListItem("user", "کاربر عادی")
+                                        },
+                        //SelectedValues = new List<string> { "user", "editor" }
+                    },
+            new TextArea { Id = "txtMessage", LabelText = "شرح", Class = "form-control", Placeholder = "پیام خود را وارد کنید", Rows = 4 },
+            new Button { Id = "btnload", OnClick = "alert()", Name = "دكمه من", Text = "myButton", Icon = "fa fa-save" }
+         )
+        .FooterHtml(@"<button class='btn btn-primary' onclick='submitModalForm()'>ثبت</button>
+                     <button class='btn btn-primary' onclick='closeModal_myModal()'>بستن</button>")
+        .Build();
+}
+
+@modal
+
+
+
+        @{
+            var model = new List<ProductSaleModel>();  // مدل دلخواه شما طبق فرمت گريد 
+        var gridUrl1 = Url.Action("GetGridViewData_WithStoreProcedure", "Home"); // اكشن و كنترلر شما
+        }
+        @(
+                Eorc_Grid<ProductSaleModel>("grdProduct1") // نام گريد شما 
+                .Url(gridUrl1)
+                .Items(model.Cast<object>().ToList()) // اين خط الزامي است
+                .PageSize(25) // پيج سايز اوليه
+                .EnablePaging(true) // فعال سازي پيجينگ گريد 
+                .EnableFiltering(true) // فعال سازي فليتر گريد
+                .EnableSorting(true) //  فعال سازي سورتينگ گريد 
+                .EnableFooter(true) // فعال سازي فوتر گريد 
+                .EnableGrouping(true) // فعال سازي گروه بندي گريد
+                .EnableExcelExport(true) // فعال سازي خروجي به اكسل
+                .EnablePDFExport(true) // فعال سازي خروجي به پي دي اف
+                .EnablePrint(true) // فعال سازي پرينت 
+                .EnableEditButton(true)// فعال سازي دكمه ويرايش
+                .EnableDeleteButton(true) // فعال سازي دكمه حذف
+                .EnableLazyLoading(false) // غير فعال نمودن لو با اسكرول 
+                .EnableAdvancedFilter(true) // فعال سازي فيلتر پيشرفته
+                .EnableInlineEdit(true) // فعال سازي ويرايش داخل گريد فعلا غير فعال است
+                .EnableShowHiddenColumns(true) // نمايش دكمه براي مخفي يا نمايش ستون هاي گريد
+                .EditJavaScriptFunction("OpenModalSearch()") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
+                @*.EditJavaScriptFunction("InsUpd_grdProduct1_Item(this)") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)*@
+                .DeleteJavaScriptFunction("CloseModalSearch()")// تابع جاوا اسكريپت براي حذف (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
+            .AddCustomHtml("<button class='grid-action-button-class' onclick='openFilterPopup()'>style</button>")// افزودن المان هاي اچ تي ام ال سفارشي
+                .Build() // اين خط لازم است 
+        )
+
+
+
+
+
+<script>
+
+   $(document).ready(function () {
+        //$('#mySelect').select2({
+        //    placeholder: "گزینه‌ها را انتخاب کنید...",
+        //    width: '100%',
+        //    tags: true,
+        //    tokenSeparators: [',', ' ']
+        //});
+
+        //$('#mySelect').select2({
+        //    placeholder: "انتخاب کنید...",
+        //    allowClear: true
+        //});
+    });
+
+    function OpenModalSearch() {
+        openModal_myModal('myModal');
+    }
+
+    function CloseModalSearch() {
+        closeModal_myModal('myModal');
+    }
+
+    function submitModalForm() {
+        var isValid = IsValidForm_myModal('myModal');
+
+        if (!isValid) {
+            alert('لطفاً تمام فیلدهای اجباری را کامل کنید!');
+            return;
+        }
+
+        alert('فرم معتبر است، می‌توانید ادامه دهید!');
+    }
+
+</script>

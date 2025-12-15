@@ -114,17 +114,15 @@ namespace GeneralModal.TagHelper
             {
                 headerHtml = $@"
                     <div class='modal-header'>
-                        {_model.HeaderHtml}
-                <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i></button>    </div>";
+                <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i></button>      {_model.HeaderHtml}</div>";
                             }
                             else if (!string.IsNullOrEmpty(_model.Title))
                             {
                                 headerHtml = $@"
-                    <div class='modal-header'>
-                        <h5 class='modal-title'>{_model.Title}</h5>
-                <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i>
-                </button>
-                    </div>";
+                                <div class='modal-header'>
+                            <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i></button>
+                                    <h5 class='modal-title'>{_model.Title}</h5>
+                                </div>";
             }
 
 
