@@ -266,3 +266,11 @@ namespace GridView.Controllers
     }
 }
 
+**Sample Grid**
+
+<img width="1918" height="777" alt="image" src="https://github.com/user-attachments/assets/5561048f-5cf4-4bdd-9d21-688e47715d18" />
+
+
+
+
+
