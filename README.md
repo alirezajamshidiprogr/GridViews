@@ -274,11 +274,7 @@ namespace GridView.Controllers
 **sample procedure sql **
 USE [GridViewSample]
 GO
-/****** Object:  StoredProcedure [dbo].[GetProductSalesPaged]    Script Date: 22/12/2025 12:14:30 ب.ظ ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+
 ALTER PROCEDURE [dbo].[GetProductSalesPaged]
     @Page INT = 1,
     @PageSize INT = 10,
