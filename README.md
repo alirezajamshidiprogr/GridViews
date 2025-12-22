@@ -271,6 +271,89 @@ namespace GridView.Controllers
 <img width="1918" height="777" alt="image" src="https://github.com/user-attachments/assets/5561048f-5cf4-4bdd-9d21-688e47715d18" />
 
 
+**sample procedure sql **
+USE [GridViewSample]
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductSalesPaged]    Script Date: 22/12/2025 12:14:30 ب.ظ ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetProductSalesPaged]
+    @Page INT = 1,
+    @PageSize INT = 10,
+    @SortColumn NVARCHAR(100) = NULL,
+    @SortAsc BIT = 1,
+    @EnablePaging BIT = 1,
+    @Filters NVARCHAR(MAX) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
 
+    DECLARE @Sql NVARCHAR(MAX) = N'SELECT * FROM ProductSales WHERE 1=1';
+    DECLARE @CountSql NVARCHAR(MAX) = N'SELECT COUNT(*) FROM ProductSales WHERE 1=1';
+
+    -- فیلترها
+    IF @Filters IS NOT NULL
+    BEGIN
+        DECLARE @FilterTable TABLE ([Key] NVARCHAR(100), Type NVARCHAR(20), Value NVARCHAR(200));
+        INSERT INTO @FilterTable([Key], Type, Value)
+        SELECT [key], JSON_VALUE([value],'$.Type'), JSON_VALUE([value],'$.Value')
+        FROM OPENJSON(@Filters);
+
+        DECLARE @key NVARCHAR(100), @type NVARCHAR(20), @val NVARCHAR(200);
+        DECLARE cur CURSOR FOR SELECT [Key], Type, Value FROM @FilterTable;
+        OPEN cur;
+        FETCH NEXT FROM cur INTO @key, @type, @val;
+
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            IF @type = 'eq'
+            BEGIN
+                SET @Sql += ' AND ' + QUOTENAME(@key) + ' = ' + QUOTENAME(@val, '''');
+                SET @CountSql += ' AND ' + QUOTENAME(@key) + ' = ' + QUOTENAME(@val, '''');
+            END
+            ELSE IF @type = 'neq'
+            BEGIN
+                SET @Sql += ' AND ' + QUOTENAME(@key) + ' <> ' + QUOTENAME(@val, '''');
+                SET @CountSql += ' AND ' + QUOTENAME(@key) + ' <> ' + QUOTENAME(@val, '''');
+            END
+            ELSE IF @type = 'contains'
+            BEGIN
+                SET @Sql += ' AND ' + QUOTENAME(@key) + ' LIKE ''%' + @val + '%''';
+                SET @CountSql += ' AND ' + QUOTENAME(@key) + ' LIKE ''%' + @val + '%''';
+            END
+            ELSE IF @type = 'startswith'
+            BEGIN
+                SET @Sql += ' AND ' + QUOTENAME(@key) + ' LIKE ''' + @val + '%''';
+                SET @CountSql += ' AND ' + QUOTENAME(@key) + ' LIKE ''' + @val + '%''';
+            END
+            ELSE IF @type = 'endswith'
+            BEGIN
+                SET @Sql += ' AND ' + QUOTENAME(@key) + ' LIKE ''%' + @val + '''';
+                SET @CountSql += ' AND ' + QUOTENAME(@key) + ' LIKE ''%' + @val + '''';
+            END
+
+            FETCH NEXT FROM cur INTO @key, @type, @val;
+        END
+
+        CLOSE cur;
+        DEALLOCATE cur;
+    END
+
+    -- مرتب سازی
+    IF @SortColumn IS NOT NULL AND @SortColumn <> ''
+        SET @Sql += ' ORDER BY ' + QUOTENAME(@SortColumn) + CASE WHEN @SortAsc = 1 THEN ' ASC' ELSE ' DESC' END;
+    ELSE
+        SET @Sql += ' ORDER BY Id ASC';
+
+    -- Paging
+    IF @EnablePaging = 1
+        SET @Sql += ' OFFSET ' + CAST((@Page-1)*@PageSize AS NVARCHAR(10)) + ' ROWS FETCH NEXT ' + CAST(@PageSize AS NVARCHAR(10)) + ' ROWS ONLY';
+
+    -- اجرای دو SELECT: ابتدا داده‌ها، سپس تعداد کل
+    EXEC sp_executesql @Sql;
+    EXEC sp_executesql @CountSql;
+END
 
 
