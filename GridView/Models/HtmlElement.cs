@@ -1,4 +1,6 @@
-﻿namespace GeneralModal.Models
+﻿using static System.Net.Mime.MediaTypeNames;
+
+namespace GeneralModal.Models
 {
     public abstract partial class HtmlElement
     {
@@ -7,15 +9,18 @@
         public string Style { get; set; } = "";
         public string Name { get; set; } = "";
         public string Placeholder { get; set; } = "";
-        public string LabelText { get; set; } = ""; // متن label خودکار
+        public string LabelText { get; set; } = "";
         public string OnClick { get; set; } = "";
+        public string ColClass { get; set; } = "";
 
-        // ویژگی‌های Validation
+        // Validation
         public bool Required { get; set; } = false;
         public int? MinLength { get; set; }
         public int? MaxLength { get; set; }
         public string Pattern { get; set; } = "";
         public string ValidationMessage { get; set; } = "";
+
+        // Fluent
         public HtmlElement SetId(string id) { Id = id; return this; }
         public HtmlElement SetClass(string cls) { Class = cls; return this; }
         public HtmlElement SetStyle(string style) { Style = style; return this; }
@@ -23,7 +28,7 @@
         public HtmlElement SetPlaceholder(string ph) { Placeholder = ph; return this; }
         public HtmlElement SetLabel(string label) { LabelText = label; return this; }
         public HtmlElement OnClickAction(string js) { OnClick = js; return this; }
-
+        public HtmlElement SetCol(string colClass) { ColClass = colClass; return this; }
         // Validation Fluent
         public HtmlElement IsRequired(bool value = true) { Required = value; return this; }
         public HtmlElement SetMinLength(int len) { MinLength = len; return this; }
@@ -35,37 +40,31 @@
         {
             string attrs = "";
 
-            bool hasValidation =
-                Required ||
-                MinLength.HasValue ||
-                MaxLength.HasValue ||
-                !string.IsNullOrEmpty(Pattern);
+            // ✅ فقط اگر Required واقعی بود
+            if (Required)
+                attrs += " required isrequired='true'";
 
-            if (Required) attrs += " required";
             if (MinLength.HasValue) attrs += $" minlength='{MinLength.Value}'";
             if (MaxLength.HasValue) attrs += $" maxlength='{MaxLength.Value}'";
             if (!string.IsNullOrEmpty(Pattern)) attrs += $" pattern='{Pattern}'";
             if (!string.IsNullOrEmpty(ValidationMessage)) attrs += $" title='{ValidationMessage}'";
 
-            // اگر هر نوع اعتبارسنجی فعال بود → isrequired اضافه شود
-            if (hasValidation) attrs += " isrequired='true'";
-
             return attrs;
         }
 
-        public virtual string RenderAttributes() => $"id='{Id}' name='{Name}' class='{Class}' style='{Style}' placeholder='{Placeholder}'";
+        public virtual string RenderAttributes()
+            => $"id='{Id}' name='{Name}' class='{Class}' style='{Style}' placeholder='{Placeholder}'";
 
-        // رندر المان و Label داخل یک div
         public virtual string Render()
-        {
-            return RenderWrapper(RenderElementHtml());
-        }
+            => RenderWrapper(RenderElementHtml());
 
         protected virtual string RenderWrapper(string elementHtml)
         {
-            string labelHtml = !string.IsNullOrEmpty(LabelText) ? $"<label for='{Id}' class='form-label'>{LabelText}</label>" : "";
-            string wrapperClass = this is CheckBox || this is RadioButton ? "form-check mb-3" : "mb-3";
-            return $"<div class='{wrapperClass}'>{labelHtml}{elementHtml}</div>";
+            string labelHtml = !string.IsNullOrEmpty(LabelText)
+                ? $"<label for='{Id}' class='form-label'>{LabelText}</label>"
+                : "";
+
+            return $"<div class='mb-3'>{labelHtml}{elementHtml}</div>";
         }
 
         protected abstract string RenderElementHtml();
@@ -82,34 +81,87 @@
             return $"<input type='text' value='{Value}' {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
         }
     }
-    //public class MultiSelect : SelectBase
-    //{
-    //    public bool Multiple { get; set; } = true; // حالت چند انتخابی
 
-    //    protected override string RenderElementHtml()
-    //    {
-    //        // کلاس پیش‌فرض
-    //        string cls = string.IsNullOrWhiteSpace(Class) ? "form-select" : Class;
-    //        if (UseSelect2) cls += " select2";
+    public class DatePickerInput : HtmlElement
+    {
+        public string Value { get; set; } = "";
+        public string IconClass { get; set; } = "mdi mdi-calendar";
+        public bool ReadOnly { get; set; } = false;
 
-    //        // name باید آرایه‌ای باشد برای ارسال چند مقدار
-    //        string nameAttr = Name;
-    //        if (!string.IsNullOrEmpty(Name) && Multiple)
-    //            nameAttr += "[]";
+        protected override string RenderElementHtml()
+        {
+            string inputClass = string.IsNullOrWhiteSpace(Class) ? "form-control datepicker" : Class;
 
-    //        // گزینه‌ها
-    //        string options = RenderOptions(true);
+            string readonlyAttr = ReadOnly ? "readonly" : "";
 
-    //        // تگ select
-    //        string selectHtml = $"<select id='{Id}' name='{nameAttr}' class='{cls}' multiple {RenderValidationAttributes()}>{options}</select>";
+            return $@"
+            <div class='input-group'>
+            <input
+            type='text'
+            id='{Id}'
+            name='{Name}'
+            value='{Value}'
+            class='{inputClass}'
+            placeholder='{Placeholder}'
+            {readonlyAttr}
+            autocomplete='off'
+            {RenderValidationAttributes()} />
 
-    //        // Label و Wrapper مانند سایر کنترل‌ها
-    //        //string labelHtml = !string.IsNullOrEmpty(LabelText) ? $"<label for='{Id}' class='form-label'>{LabelText}</label>" : "";
-    //        string wrapperClass = "mb-3"; // مانند TextBox و TextArea
+            <div class='input-group-append'>
+            <span class='input-group-append ml-n1'>
+                    <div class='input-group-text bg-transparent'><i class='mdi  mdi-calendar'></i></div>
+                </span>
+            </div>
+            </div>
+            ";
+        }
+    }
 
-    //        return $"<div class='{wrapperClass}'>{selectHtml}</div>";
-    //    }
-    //}
+    public class TimePickerInput : HtmlElement
+    {
+        public string Value { get; set; } = "";
+        public string IconClass { get; set; } = "mdi mdi-calendar";
+        public bool ReadOnly { get; set; } = false;
+
+        protected override string RenderElementHtml()
+        {
+            string inputClass = string.IsNullOrWhiteSpace(Class) ? "form-control" : Class;
+            string readonlyAttr = ReadOnly ? "readonly" : "";
+
+
+
+            //                       <div class="clearfix">
+            //                           <div class="input-group clockpicker-with-callbacks">
+            //                               <input id = "inptFromTime" type="text" class="form-control">
+            //                               <span class="input-group-addon">
+            //                                   <span class="glyphicon glyphicon-time"></span>
+            //                               </span>
+            //	</div>
+            //</div>
+
+
+            return $@"
+            <div class='clearfix'>
+            <div class='input-group clockpicker-with-callbacks'>
+            <input
+            id='{Id}'
+            type='text'
+            class='{inputClass}'
+            placeholder='{Placeholder}'
+            name='{Name}'
+            value='{Value}'
+            {readonlyAttr}
+            {RenderValidationAttributes()} />
+            <span class='input-group-addon'>
+                    <span class='glyphicon glyphicon-time'></span>
+                </span>
+                </div>
+            </div>
+        
+            ";
+
+        }
+    }
 
     public class MultiSelectSelect2 : HtmlElement
     {
@@ -170,7 +222,6 @@
     }
 
 
-
     public class PasswordBox : HtmlElement
     {
         public string Value { get; set; } = "";
@@ -181,6 +232,7 @@
             return $"<input type='password' value='{Value}' {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
         }
     }
+
 
     public class TextArea : HtmlElement
     {
@@ -239,7 +291,7 @@
                 ? $"<label for='{Id}' class='{LabelClass}'>{Label}</label>"
                 : "";
 
-                        return $@"
+            return $@"
             <div class='form-check mb-3 custom-check'>
                 {inputHtml}
                 {labelHtml}
@@ -264,9 +316,19 @@
     {
         public string Type { get; set; } = "button";
         public string Text { get; set; } = "Button";
-        public string OnClick { get; set; } = "";
-        // آیکن دلخواه مثل: "fa fa-save" یا "<i class='fa fa-plus'></i>"
         public string Icon { get; set; } = "";
+
+        public Button SetText(string text)
+        {
+            Text = text;
+            return this;
+        }
+
+        public Button SetIcon(string icon)
+        {
+            Icon = icon;
+            return this;
+        }
 
         protected override string RenderElementHtml()
         {
@@ -276,11 +338,9 @@
             string iconHtml = "";
             if (!string.IsNullOrWhiteSpace(Icon))
             {
-                // اگر فقط کلاس آیکن فرستاده شود
-                if (!Icon.Trim().StartsWith("<"))
-                    iconHtml = $"<i class='{Icon}'></i> ";
-                else
-                    iconHtml = Icon + " ";
+                iconHtml = Icon.Trim().StartsWith("<")
+                    ? Icon + " "
+                    : $"<i class='{Icon}'></i> ";
             }
 
             return $"<button id='{Id}' type='{Type}' class='{cls}' {onclickAttr}>{iconHtml}{Text}</button>";

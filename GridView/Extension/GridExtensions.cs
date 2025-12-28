@@ -326,12 +326,12 @@ public static class GridExtensions
         }
     }
 
-    public static async Task<GridResultDto<T>> GetGridDataFromSPAsync<T>(string spName) where T : class, new()
+    public static async Task<GridResultDto<T>> GetGridDataFromSPAsync<T>(string spName,string connection, object? searchModel = null) where T : class, new()
     {
         try
         {
             // استفاده از connection pool به جای باز و بسته کردن مکرر اتصال
-            using SqlConnection conn = new SqlConnection("Server=SAP-16;Database=GridViewSample;User ID=sa;Password=137011;TrustServerCertificate=True;");
+            using SqlConnection conn = new SqlConnection(connection);
             await conn.OpenAsync();
 
             var httpContextAccessor = CoreServiceProviders.serviceProvider.GetService<IHttpContextAccessor>();
@@ -357,6 +357,28 @@ public static class GridExtensions
             cmd.Parameters.AddWithValue("@SortColumn", request.SortColumn ?? "");
             cmd.Parameters.AddWithValue("@SortAsc", request.SortAsc);
             cmd.Parameters.AddWithValue("@Filters", JsonSerializer.Serialize(request.Filters ?? new Dictionary<string, GridFilter>()));
+
+            // ---------- Dynamic Search Parameters User ----------
+            if (searchModel != null)
+            {
+                var properties = searchModel.GetType().GetProperties();
+
+                foreach (var prop in properties)
+                {
+                    var value = prop.GetValue(searchModel);
+
+                    // اگر null بود، ارسال نکن
+                    if (value == null)
+                        continue;
+
+                    // اگر string خالی بود => null (DBNull)
+                    if (value is string str && string.IsNullOrWhiteSpace(str))
+                        value = DBNull.Value;
+
+                    var paramName = "@" + prop.Name;
+                    cmd.Parameters.AddWithValue(paramName, value);
+                }
+            }
 
             var list = new List<T>();
             int totalCount = 0;

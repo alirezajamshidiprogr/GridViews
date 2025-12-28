@@ -28,18 +28,24 @@ namespace GridView.Controllers
             return View("IndexStoreProcedureCodeFirst");
         }
 
+        public IActionResult IndexForm()
+        {
+            return View("IndexForm");
+        }
+
         [HttpPost]
         public async Task<IActionResult> GetGridViewData_WithStoreProcedure()
         {
             // در صورتي كه در گريد در body مقداري  هست بخوان 
-            var requestDto = await GridExtensions.ReadRequestBodyAsync<CustomGridRequestDto>(Request);
+            var gridSearchUser = await GridExtensions.ReadRequestBodyAsync<CustomGridRequestDto>(Request);
 
-            if (requestDto.SearchTerm != null)
+            if (gridSearchUser.SearchTerm != null)
             {
-                var searchTerm = requestDto.SearchTerm; // به عنوان مثال می‌توانید از این مقدار برای فیلتر استفاده کنید
+                var searchTerm = gridSearchUser.SearchTerm; // به عنوان مثال می‌توانید از این مقدار برای فیلتر استفاده کنید
             }
 
-            var result = await GridExtensions.GetGridDataFromSPAsync<ProductSaleModel>("GetProductSalesPaged");
+            string connection = "Server=SAP-16;Database=GridViewSample;User ID=sa;Password=137011;TrustServerCertificate=True;";
+            GridResultDto<ProductSaleModel> result = await GridExtensions.GetGridDataFromSPAsync<ProductSaleModel>("GetProductSalesPaged", connection, gridSearchUser);
             return Json(result);
         }
 
@@ -74,8 +80,8 @@ namespace GridView.Controllers
 
                     SalesPersonId = ps.SalesPersonId,
                     SalesPersonFullName = ps.SalesPerson.FullName
-                })
-                .AsQueryable();
+                });
+               
 
 
             // صدا زدن متد EF Core Grid

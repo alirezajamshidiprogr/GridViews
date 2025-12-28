@@ -1,0 +1,60 @@
+﻿@using GeneralModal.Models
+@using GeneralModal.TagHelper
+@using GridView.TagHelper;
+
+@{
+    var formHtml = new GenericCollapsibleFormBuilder("myForm")
+        .Title("فرم ثبت اطلاعات")
+        .Columns(6) // دو ستون
+        .EnableValidation(true)
+        .AddElements(
+            new TextBox().SetId("firstName").SetClass("form-control").SetName("firstName").SetLabel("نام").IsRequired(false),
+            new TextBox().SetId("lastName").SetClass("form-control").SetName("lastName").SetLabel("نام خانوادگی").IsRequired(),
+            new DatePickerInput().SetCol("col-8").SetId("birthDate").SetClass("form-control").SetName("birthDate").SetLabel("تاریخ تولد").IsRequired(),
+            new CheckBox().SetId("subscribe").SetClass("form-control").SetName("subscribe").SetLabel("عضویت در خبرنامه"),
+            new TextArea().SetId("notes").SetCol("col-8").SetClass("form-control").SetName("notes").SetLabel("توضیحات"),
+            new Button().SetText("تاييد").SetIcon("<i class='mdi mdi-check'></i>").OnClickAction("alert()").SetClass("btn btn-primary")
+        )
+        .Build();
+}
+
+@formHtml
+
+
+<button type="button" class="btn btn-success" onclick="submitForm_myForm()">
+    ارسال فرم
+</button>
+
+
+<script>
+
+    function submitForm_myForm() {
+        var container = document.getElementById('myForm');
+        if (!container) return;
+
+        // Validation اگر فعال است
+        var fields = container.querySelectorAll('input[isrequired], textarea[isrequired], select[isrequired]');
+        var formIsValid = true;
+
+        fields.forEach(function (field) {
+            if (!validateField(field)) formIsValid = false;
+        });
+
+        if (!formIsValid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'خطا',
+                text: 'لطفاً تمام فیلدهای اجباری را کامل کنید!',
+                confirmButtonText: 'باشه'
+            });
+            return;
+        }
+
+        // گرفتن مقادیر فرم
+        var values = getInputValuesForm_myForm();
+        console.log('Form Values:', values);
+
+        // اینجا می‌تونی Ajax بزنی یا به اکشن سرور بفرستی
+    }
+
+</script>

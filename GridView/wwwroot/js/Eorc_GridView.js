@@ -1,7 +1,29 @@
-﻿/// Grid Utility --
+﻿// جلوگیری از init دوباره
+window.__EORC_GRID_INITIALIZED__ = window.__EORC_GRID_INITIALIZED__ || {};
+
+/// Grid Utility --
+
+// جلوگيري از دوبار اجرا شدن
+function safeInitGrid(gridName, isLazyLoading) {
+    window.__EORC_GRID_INITIALIZED__ = window.__EORC_GRID_INITIALIZED__ || {};
+
+    // اگر قبلاً init شده، کلاً برگرد
+    if (window.__EORC_GRID_INITIALIZED__[gridName]) {
+        console.warn(`Grid ${gridName} already initialized`);
+        return;
+    }
+
+    // ثبت اینکه این گرید init شد
+    window.__EORC_GRID_INITIALIZED__[gridName] = true;
+
+    // init واقعی
+    initGrid(gridName, isLazyLoading);
+    initFilterIcons(gridName);
+    enableRowDetailsPopup(gridName);
+}
+
 
 // خروجي PDF
-
 function exportGridToPdf(gridName) {
     const grid = document.getElementById(gridName);
     if (!grid) {
@@ -1178,8 +1200,7 @@ function renderRows(items, columns = null, gridName = null, filters, sortColumn,
             if (!isNaN(originalValue) && originalValue !== null && originalValue !== '') {
                 div.textContent = Number(originalValue).toLocaleString();
             } else {
-                div.textContent = (originalValue);
-                //div.textContent = truncateText(originalValue);
+                div.textContent = truncateText(originalValue);
             }
 
             if (!col.visible) {
@@ -1535,19 +1556,27 @@ function initGrid(gridName, lazyLoading = true) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // مقداردهی همه گریدهای تعریف شده در window.Grids
-    Object.keys(window.Grids).forEach(gridName => {
-        const gridData = document.querySelector('#' + gridName + '_gridData');
-        var isLazyLoading = gridData?.dataset.lazyLoading
-        initGrid(gridName, isLazyLoading);
-        initFilterIcons(gridName);
-        //adjustGridColumnWidths(gridName);
-        enableRowDetailsPopup(gridName);
+    // اگر Grids وجود ندارد، کل کد Grid اجرا نشود
+    if (!window.Grids || typeof window.Grids !== 'object') {
+        return;
+    }
 
+
+    window.__EORC_GRID_INITIALIZED__ = window.__EORC_GRID_INITIALIZED__ || {};
+
+    Object.keys(window.Grids).forEach(gridName => {
+
+        const gridData = document.getElementById(gridName + '_gridData');
+        if (!gridData) return;
+
+        const isLazyLoading = gridData.dataset.lazyLoading === 'true';
+
+        safeInitGrid(gridName, isLazyLoading);
     });
 
     enableGridRowSelection();
 });
+
 
 // بستن منو وقتی جای دیگه کلیک شد
 document.addEventListener('click', e => {

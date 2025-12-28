@@ -131,6 +131,8 @@ namespace GridView.TagHelpers
             html = $"<div id='{_gridName}' class='eorc-dynamic-grid-container'>";
             html += $@"
             <div id='{_gridName}_gridData'
+                 data-grid-name='{_gridName}'
+                 data-initialized='false'
                  data-url='{_url ?? ""}'
                  data-enable-paging='{_enablePaging.ToString().ToLower()}'
                  data-edit-button='{(_enableEditButton ?? false).ToString().ToLower()}'
@@ -140,6 +142,7 @@ namespace GridView.TagHelpers
                  data-lazy-loading='{(_enableLazyLoading).ToString().ToLower()}'
                  data-page-size='{_pageSize}'
             style='display:none;'";
+
 
             // اضافه کردن پارامترهای تابع Edit
             if (_editFunctionParams != null)
@@ -209,29 +212,29 @@ namespace GridView.TagHelpers
 
             if (_enablePdfExport.HasValue && _enablePdfExport.Value)
             {
-                html += $"<div class='col-md-1 grid-buttons-col'><button id='PdfGridBtn' onclick='exportGridToPdf(\"{_gridName}\")' class='grid-action-button-class'> خروجي pdf <i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-pdf-o'></i> </button></div>";
+                html += $"<div class='grid-buttons-col'><button id='PdfGridBtn' onclick='exportGridToPdf(\"{_gridName}\")' class='grid-action-button-class'> خروجي pdf <i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-pdf-o'></i> </button></div>";
             }
             if (_enableExcelExport.HasValue && _enableExcelExport.Value)
             {
-                html += $"<div class='col-md-1 grid-buttons-col'><button id='ExcelGridBtn' onclick='exportGridToExcelXlsx(\"{_gridName}\")' class='grid-action-button-class'> خروجي اكسل<i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-excel-o'></i> </button></div>";
+                html += $"<div class='grid-buttons-col'><button id='ExcelGridBtn' onclick='exportGridToExcelXlsx(\"{_gridName}\")' class='grid-action-button-class'> خروجي اكسل<i style='margin-right: 6px;font-size: 20px;' class='fa fa-file-excel-o'></i> </button></div>";
             }
             if (_enablePrint.HasValue && _enablePrint.Value)
             {
-                html += $"<div class='col-md-1 grid-buttons-col'> <button id='printGridBtn' onclick='printDynamicGrid(\"{_gridName}\")' class='grid-action-button-class'>پرینت  <i style='margin-right: 6px;font-size: 20px;' class='fa fa-print'></i></button></div>";
+                html += $"<div class='grid-buttons-col'> <button id='printGridBtn' onclick='printDynamicGrid(\"{_gridName}\")' class='grid-action-button-class'>پرینت  <i style='margin-right: 6px;font-size: 20px;' class='fa fa-print'></i></button></div>";
             }
             if (_enableShowHiddenColumns.HasValue && _enableShowHiddenColumns.Value)
             {
-                html += $"<div class='col-md-1 grid-buttons-col'> <button id='displayGridColumns' onclick='displayGridColumns(\"{_gridName}\")' class='grid-action-button-class'>نمايش ستون<i style='margin-right: 6px;font-size: 20px;' class='fa fa-columns'></i></button></div>";
+                html += $"<div class='grid-buttons-col'> <button id='displayGridColumns' onclick='displayGridColumns(\"{_gridName}\")' class='grid-action-button-class'>نمايش ستون<i style='margin-right: 6px;font-size: 20px;' class='fa fa-columns'></i></button></div>";
             }
             if (_enableAdvancedFilter.HasValue && _enableAdvancedFilter.Value)
             {
-                html += $"<div class='col-md-1 grid-buttons-col'> <button id='displayGridColumns' onclick='displayAdvancedFilter(\"{_gridName}\")' class='grid-action-button-class'>فيلتر پيشرفته<i style='margin-right: 6px;font-size: 20px;' class='fa fa-search'></i></button></div>";
+                html += $"<div class='grid-buttons-col'> <button id='displayGridColumns' onclick='displayAdvancedFilter(\"{_gridName}\")' class='grid-action-button-class'>فيلتر پيشرفته<i style='margin-right: 6px;font-size: 20px;' class='fa fa-search'></i></button></div>";
             }
             if (_customHtmlElements.Any())
             {
                 foreach (var customHtml in _customHtmlElements)
                 {
-                    html += $"<div class='col-md-1 grid-buttons-col'>{customHtml}</div>";
+                    html += $"<div class='grid-buttons-col'>{customHtml}</div>";
                 }
             }
 

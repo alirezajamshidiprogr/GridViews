@@ -139,6 +139,24 @@ namespace GeneralModal.TagHelper
             // --- Script ولیدیشن + Open/Close Bootstrap 4 compatible ---
             string script = $@"
 <script>
+// ----------intitialSelect2 Controls---------- 
+function initSelect2_(modalId){{
+
+    var modal = document.getElementByUd(modalId) ;
+    if (!modal) return ;
+
+
+    $modal.find('select.select2').each(function () {{
+        if ($select.hasClass('select2-hidden-accessible')){{
+        $(this).select2({{
+        dropdownParent : $modal,
+        width:'100%' ,
+        placeholder: $select.data('placeholder') || '' ,
+        assowClear: true 
+        }});
+    }}
+ }});
+}}
 
 // ---------- Open And Close Modal ----------
 function openModal_{_model.Id}(id) {{
@@ -162,7 +180,51 @@ function openModal_{_model.Id}(id) {{
     // وقتی روی بک‌دراپ کلیک شد مدال بسته شود
     backdrop.onclick = function () {{ closeModal_{_model.Id}(modal); }};
     document.body.appendChild(backdrop);
+
+
+    // لود سلكت ها
+
+    //initSelect2('{_model.Id}'); 
+
+
+     //$('.clockpicker-with-callbacks').clockpicker({{donetext: 'Done',}})
 }}
+
+// به دست آوردن مقادير پاپ آپ
+function getInputValuesModal(modalIdOrElement) {{
+//نحوه استفاده :
+//var values = getInputValuesModal('myModal');
+
+    // بررسی اینکه ورودی یک عنصر HTML است یا یک شناسه
+    var modal = typeof modalIdOrElement === 'string' 
+        ? document.getElementById(modalIdOrElement) 
+        : modalIdOrElement;
+    
+    if (!modal) return {{}};
+
+    var inputs = modal.querySelectorAll('input, select, textarea');
+    var model = {{}};
+
+    inputs.forEach(function(input) {{
+        // فقط input هایی که name یا id دارند
+        var key = input.name || input.id;
+        if (!key) return;
+
+        // مقدار input را بگیریم
+        if (input.type === 'checkbox') {{
+            model[key] = input.checked;
+        }} else if (input.type === 'radio') {{
+            if (input.checked) model[key] = input.value;
+        }} else if (input.tagName.toLowerCase() === 'select' && input.multiple) {{
+            model[key] = Array.from(input.selectedOptions).map(o => o.value);
+        }} else {{
+            model[key] = input.value;
+        }}
+    }});
+
+    return model;
+}}
+
 
 function closeModal_{_model.Id}() {{
     var modal = document.getElementById('{_model.Id}');
