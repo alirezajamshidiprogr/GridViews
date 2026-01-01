@@ -1,4 +1,4 @@
-﻿namespace GeneralModal.Models
+﻿namespace GridView.ViewModel
 {
     public abstract class SelectBase : HtmlElement
     {

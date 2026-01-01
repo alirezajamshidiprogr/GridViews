@@ -1,4 +1,4 @@
-﻿namespace GridView.Models
+﻿namespace GridView.TagHelper
 {
     public class GenericModalModel
     {

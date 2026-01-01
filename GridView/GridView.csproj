@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="wwwroot\font-awsome\js\" />
+	  <Folder Include="wwwroot\logo\" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using static System.Net.Mime.MediaTypeNames;
 
-namespace GeneralModal.Models
+namespace GridView.ViewModel
 {
     public abstract partial class HtmlElement
     {

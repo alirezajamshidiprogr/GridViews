@@ -1,6 +1,6 @@
-﻿@using GeneralModal.Models
-@using GeneralModal.TagHelper
+﻿@using GeneralModal.TagHelper
 @using GridView.TagHelper;
+@using GridView.ViewModel;
 
 @{
     var formHtml = new GenericCollapsibleFormBuilder("myForm")
@@ -21,40 +21,40 @@
 @formHtml
 
 
-<button type="button" class="btn btn-success" onclick="submitForm_myForm()">
+<button type="button" class="btn btn-success" onclick="submitForm_myForm('myForm')">
     ارسال فرم
 </button>
 
 
 <script>
 
-    function submitForm_myForm() {
-        var container = document.getElementById('myForm');
-        if (!container) return;
+    //function submitForm_myForm(modal) {
+    //    var container = document.getElementById(modal);
+    //    if (!container) return;
 
-        // Validation اگر فعال است
-        var fields = container.querySelectorAll('input[isrequired], textarea[isrequired], select[isrequired]');
-        var formIsValid = true;
+    //    // Validation اگر فعال است
+    //    var fields = container.querySelectorAll('input[isrequired], textarea[isrequired], select[isrequired]');
+    //    var formIsValid = true;
 
-        fields.forEach(function (field) {
-            if (!validateField(field)) formIsValid = false;
-        });
+    //    fields.forEach(function (field) {
+    //        if (!validateField(field)) formIsValid = false;
+    //    });
 
-        if (!formIsValid) {
-            Swal.fire({
-                icon: 'error',
-                title: 'خطا',
-                text: 'لطفاً تمام فیلدهای اجباری را کامل کنید!',
-                confirmButtonText: 'باشه'
-            });
-            return;
-        }
+    //    if (!formIsValid) {
+    //        Swal.fire({
+    //            icon: 'error',
+    //            title: 'خطا',
+    //            text: 'لطفاً تمام فیلدهای اجباری را کامل کنید!',
+    //            confirmButtonText: 'باشه'
+    //        });
+    //        return;
+    //    }
 
-        // گرفتن مقادیر فرم
-        var values = getInputValuesForm_myForm();
-        console.log('Form Values:', values);
+    //    // گرفتن مقادیر فرم
+    //    var values = getInputValuesForm_myForm();
+    //    console.log('Form Values:', values);
 
-        // اینجا می‌تونی Ajax بزنی یا به اکشن سرور بفرستی
-    }
+    //    // اینجا می‌تونی Ajax بزنی یا به اکشن سرور بفرستی
+    //}
 
 </script>

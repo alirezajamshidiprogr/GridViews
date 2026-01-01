@@ -1,4 +1,4 @@
-﻿namespace GridView.Enums
+﻿namespace GridView.ViewModel.Enums
 {
     public enum ModalSize
     {

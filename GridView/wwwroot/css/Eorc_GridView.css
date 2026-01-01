@@ -978,18 +978,7 @@ select option {
             transform: translate(-50%, -50%);
         }
 
-.grid-buttons-col {
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 15px;
-}
 
-@media (min-width: 768px) {
-    .grid-buttons-col {
-        flex: 0 0 8.333333%;
-        max-width: 8.333333%;
-    }
-}
 /* Default size */
 .modal-dialog {
     max-width: 500px; /* سایز پیش‌فرض */
@@ -1021,32 +1010,3 @@ select option {
     align-items: center;
     min-height: calc(100% - 1rem);
 }
-
-
-
-/*form style */
-.card-header {
-    cursor: pointer; /* نشانگر کلیک */
-    background: linear-gradient(90deg, #062562, #2575fc); /* گرادیانت زیبا */
-    color: white; /* متن سفید */
-    font-weight: 600; /* کمی پررنگ */
-    padding: 0.75rem 1rem; /* فاصله داخلی */
-    border-radius: 0.5rem 0.5rem 0 0; /* گوشه‌های بالایی گرد */
-    display: flex; /* برای راست‌چین بهتر */
-    justify-content: flex-end; /* متن سمت راست */
-    align-items: center;
-    transition: background 0.3s ease; /* افکت هاور */
-    user-select: none; /* جلوگیری از انتخاب متن */
-}
-
-    /* افکت هاور */
-    .card-header:hover {
-        background: linear-gradient(90deg, #2575fc, #2575fc);
-    }
-
-    /* راست‌چین کردن متن داخل h5 */
-    .card-header h5 {
-        margin: 0;
-        text-align: right;
-        flex: 1; /* برای پر کردن فضای افقی */
-    }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Html;
 using System.Text;
-using GeneralModal.Models;
+using GridView.ViewModel;
 
 namespace GridView.TagHelper
 {
@@ -136,17 +136,31 @@ function isValidForm_{_id}() {{
     return valid;
 }}
 
-function submitForm_{_id}() {{
-    if(!isValidForm_{_id}()) {{
-        alert('لطفاً تمام فیلدهای اجباری را کامل کنید!');
+function submitForm_myForm(modalId) {{
+debugger 
+    var container = document.getElementById(modalId);
+    if (!container) return;
+
+    // Validation
+    var fields = container.querySelectorAll('input[isrequired], textarea[isrequired], select[isrequired]');
+    var formIsValid = true;
+
+    fields.forEach(function (field) {{
+        if (!validateField(field)) formIsValid = false;
+    }});
+
+    if (!formIsValid) {{
+        Swal.fire({{
+            icon: 'error',
+            title: 'خطا',
+            text: 'لطفاً تمام فیلدهای اجباری را کامل کنید!',
+            confirmButtonText: 'باشه'
+        }});
         return;
     }}
 
-    var values = getInputValuesForm_{_id}();
-    console.log('Form Values:', values);
-
-    // اینجا می‌تونی Ajax یا callback بزنی
 }}
+
 </script>
 ");
 

@@ -1,6 +1,5 @@
-﻿@using GeneralModal.Models;
-@using GeneralModal.TagHelper;
-@using GridView.Enums;
+﻿@using GeneralModal.TagHelper;
+@using GridView.ViewModel.Enums;
 @using GridView.ViewModel;
 @using GridView.TagHelpers
 @using static GridView.TagHelpers.DynamicGridExtensions
@@ -93,7 +92,7 @@
                 .EditJavaScriptFunction("OpenModalSearch()") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
                 @*.EditJavaScriptFunction("InsUpd_grdProduct1_Item(this)") // تابع جاوا اسكريپت براي ويرايش (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)*@
                 .DeleteJavaScriptFunction("CloseModalSearch()")// تابع جاوا اسكريپت براي حذف (به صورت پيش فرض تابعي با نام گريد ايجاد ميشود و اين مورد كاستومايز كردن است)
-            .AddCustomHtml("<button class='grid-action-button-class' onclick='openFilterPopup()'>style</button>")// افزودن المان هاي اچ تي ام ال سفارشي
+                .AddCustomHtml("<button class='grid-action-button-class' onclick='openFilterPopup()'>style</button>")// افزودن المان هاي اچ تي ام ال سفارشي
                 .Build() // اين خط لازم است 
         )
 

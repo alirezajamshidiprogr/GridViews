@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Html;
-using GeneralModal.Models;
 using System.Text;
-using GridView.Models;
 using System.Xml.Linq;
-using GridView.Enums;
+using GridView.TagHelper;
+using GridView.ViewModel;
+using GridView.ViewModel.Enums;
 
 namespace GeneralModal.TagHelper
 {
