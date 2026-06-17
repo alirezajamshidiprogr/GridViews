@@ -433,7 +433,7 @@ public static class GridExtensions
         catch (Exception ex)
         {
 
-            throw;
+            throw ex;
         }
     }
 

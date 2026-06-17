@@ -7,55 +7,55 @@ using GridView.ViewModel.Enums;
 
 namespace GeneralModal.TagHelper
 {
-    public class GenericModalBuilder
+    public class Eorc_ModalBuilder
     {
         private readonly GenericModalModel _model;
         private bool _enableValidation = true;
         private int _columns = 1;
 
-        public GenericModalBuilder(string id)
+        public Eorc_ModalBuilder(string id)
         {
             _model = new GenericModalModel { Id = id };
         }
 
-        public GenericModalBuilder EnableValidation(bool enable = true)
+        public Eorc_ModalBuilder EnableValidation(bool enable = true)
         {
             _enableValidation = enable;
             return this;
         }
 
-        public GenericModalBuilder Columns(int columns)
+        public Eorc_ModalBuilder Columns(int columns)
         {
-            _columns = Math.Max(1, columns); 
+            _columns = Math.Max(1, columns);
             return this;
         }
-        public GenericModalBuilder Title(string title)
+        public Eorc_ModalBuilder Title(string title)
         {
             _model.Title = title;
             return this;
         }
 
-        public GenericModalBuilder Size(ModalSize size)
+        public Eorc_ModalBuilder Size(ModalSize size)
         {
-            _model.Size = size.ToString(); 
+            _model.Size = size.ToString();
             return this;
         }
 
 
-        public GenericModalBuilder HeaderHtml(string html)
+        public Eorc_ModalBuilder HeaderHtml(string html)
         {
             _model.HeaderHtml = html;
             return this;
         }
 
-        public GenericModalBuilder FooterHtml(string html)
+        public Eorc_ModalBuilder FooterHtml(string html)
         {
             _model.FooterHtml = html;
             return this;
         }
 
         // پذیرش چند HtmlElement
-        public GenericModalBuilder BodyHtml(params HtmlElement[] elements)
+        public Eorc_ModalBuilder BodyHtml(params HtmlElement[] elements)
         {
             var sb = new StringBuilder();
             if (_columns <= 1)
@@ -64,7 +64,7 @@ namespace GeneralModal.TagHelper
                 foreach (var el in elements)
                 {
                     // هر HtmlElement شامل <label> و <input> خودش باشد
-                                sb.AppendLine($@"
+                    sb.AppendLine($@"
                     <div class='mb-3'>
                         {el.Render()}
                     </div>");
@@ -115,10 +115,10 @@ namespace GeneralModal.TagHelper
                 headerHtml = $@"
                     <div class='modal-header'>
                 <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i></button>      {_model.HeaderHtml}</div>";
-                            }
-                            else if (!string.IsNullOrEmpty(_model.Title))
-                            {
-                                headerHtml = $@"
+            }
+            else if (!string.IsNullOrEmpty(_model.Title))
+            {
+                headerHtml = $@"
                                 <div class='modal-header'>
                             <button type=""button"" class=""close"" onclick=""closeModal_{_model.Id}(this)"">    <i class=""fa fa-times""></i></button>
                                     <h5 class='modal-title'>{_model.Title}</h5>
@@ -158,38 +158,6 @@ function initSelect2_(modalId){{
  }});
 }}
 
-// ---------- Open And Close Modal ----------
-function openModal_{_model.Id}(id) {{
-    var modal = document.getElementById(id);
-    if (!modal) return;
-
-    modal.classList.add('fade');
-    modal.style.display = 'block';
-
-    setTimeout(() => {{
-        modal.classList.add('show');
-        initSelect2Controls('{_model.Id}');
-    }}, 10);
-
-    document.body.classList.add('modal-open');
-
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-
-    var backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop fade show';
-    // وقتی روی بک‌دراپ کلیک شد مدال بسته شود
-    backdrop.onclick = function () {{ closeModal_{_model.Id}(modal); }};
-    document.body.appendChild(backdrop);
-
-
-    // لود سلكت ها
-
-    //initSelect2('{_model.Id}'); 
-
-
-     //$('.clockpicker-with-callbacks').clockpicker({{donetext: 'Done',}})
-}}
-
 // به دست آوردن مقادير پاپ آپ
 function getInputValuesModal(modalIdOrElement) {{
 //نحوه استفاده :
@@ -225,6 +193,36 @@ function getInputValuesModal(modalIdOrElement) {{
     return model;
 }}
 
+
+// ---------- Open And Close Modal ----------
+function openModal_{_model.Id}(id) {{
+    var modal = document.getElementById(id);
+    if (!modal) return;
+
+    modal.classList.add('fade');
+    modal.style.display = 'block';
+
+    setTimeout(() => {{
+        modal.classList.add('show');
+       // initSelect2Controls('{_model.Id}');
+    }}, 10);
+
+    document.body.classList.add('modal-open');
+
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    // وقتی روی بک‌دراپ کلیک شد مدال بسته شود
+    backdrop.onclick = function () {{ closeModal_{_model.Id}(modal); }};
+    document.body.appendChild(backdrop);
+
+    // لود سلكت ها
+    //initSelect2('{_model.Id}'); 
+
+     $('.clockpicker-with-callbacks').clockpicker({{donetext: 'Done',}})
+            
+}}
 
 function closeModal_{_model.Id}() {{
     var modal = document.getElementById('{_model.Id}');
@@ -322,34 +320,31 @@ function initSelect2Controls(modalId) {{
     }});
 }}
 // ---------- Submit ----------
-function submitModalForm_{_model.Id}() {{
-    {(_enableValidation ? $@"
-    var modal = document.getElementById('{_model.Id}');
-    if (!modal) return;
+// وليديشن فرم ها
+function submitForm_modal(modalId){{
+    var container = document.getElementById(modalId) ; 
+    if (!container) return ;
 
-    var fields = modal.querySelectorAll('input[isrequired], textarea[isrequired], select[isrequired]');
-    var formIsValid = true;
+    //Validation
+    var fields = container.querySelectorAll('input[isrequired],textarea[isrequired],select[isrequired]');
+    var formIsValid = true ;
 
-    fields.forEach(function(field) {{
-        if (!field.checkValidity()) {{
-            field.classList.add('is-invalid');
-            field.classList.remove('is-valid');
-            formIsValid = false;
-        }} else {{
-            field.classList.remove('is-invalid');
-            field.classList.add('is-valid');
-        }}
-    }});
+    fields.forEach(function (field) {{
+        if (!validateField(field)) formIsValid = false ;
+        }});
 
     if (!formIsValid) {{
-        alert('لطفاً تمام فیلدهای اجباری را کامل کنید!');
-        return;
-    }}
+        swal({{
+                title: 'خطا',
+                type: 'error',
+                text: 'لطفاً تمام فيلد هاي اجباري را كامل كنيد ' , 
+                icon: 'error',
+                confirmButtonText : 'باشه'
+            }});
+         return false;
+        }}
 
-    alert('فرم معتبر است!');
-    " : @"
-    console.log('Validation disabled, form submitted');
-    ")}
+return true  ;
 }}
 
 </script>";

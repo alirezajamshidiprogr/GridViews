@@ -8,9 +8,12 @@ namespace GridView.ViewModel
         public string Class { get; set; } = "";
         public string Style { get; set; } = "";
         public string Name { get; set; } = "";
+        public bool ReadOnly { get; set; } = false;
+        public bool Hidden { get; set; } = false;
         public string Placeholder { get; set; } = "";
         public string LabelText { get; set; } = "";
         public string OnClick { get; set; } = "";
+        public string OnChange { get; set; } = "";
         public string ColClass { get; set; } = "";
 
         // Validation
@@ -23,11 +26,14 @@ namespace GridView.ViewModel
         // Fluent
         public HtmlElement SetId(string id) { Id = id; return this; }
         public HtmlElement SetClass(string cls) { Class = cls; return this; }
+        public HtmlElement SetReadOnly(bool value = true) { ReadOnly = value; return this; }
+        public HtmlElement SetHidden(bool value = true) { Hidden = value; return this; }
         public HtmlElement SetStyle(string style) { Style = style; return this; }
         public HtmlElement SetName(string name) { Name = name; return this; }
         public HtmlElement SetPlaceholder(string ph) { Placeholder = ph; return this; }
         public HtmlElement SetLabel(string label) { LabelText = label; return this; }
         public HtmlElement OnClickAction(string js) { OnClick = js; return this; }
+        public HtmlElement OnChangeAction(string js) { OnChange = js; return this; }
         public HtmlElement SetCol(string colClass) { ColClass = colClass; return this; }
         // Validation Fluent
         public HtmlElement IsRequired(bool value = true) { Required = value; return this; }
@@ -55,6 +61,7 @@ namespace GridView.ViewModel
         public virtual string RenderAttributes()
             => $"id='{Id}' name='{Name}' class='{Class}' style='{Style}' placeholder='{Placeholder}'";
 
+
         public virtual string Render()
             => RenderWrapper(RenderElementHtml());
 
@@ -68,19 +75,37 @@ namespace GridView.ViewModel
         }
 
         protected abstract string RenderElementHtml();
+
     }
 
 
     public class TextBox : HtmlElement
     {
         public string Value { get; set; } = "";
-
         protected override string RenderElementHtml()
         {
+            if (Hidden)
+                return $"<input id='{Id}' type='hidden' name='{Name}' value='{Value}' />";
+
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
+
             string cls = string.IsNullOrWhiteSpace(Class) ? "form-control" : Class;
-            return $"<input type='text' value='{Value}' {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
+            string readOnlyAttr = ReadOnly ? "readonly" : "";
+            return $"<input type='text' {onChangeAttr} value='{Value}' {readOnlyAttr} {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
         }
     }
+
+
+    public class CustomHTML : HtmlElement
+    {
+        public string HtmlText { get; set; } = "";
+        protected override string RenderElementHtml()
+        {
+            return HtmlText;
+        }
+    }
+
+
 
     public class DatePickerInput : HtmlElement
     {
@@ -127,6 +152,7 @@ namespace GridView.ViewModel
         {
             string inputClass = string.IsNullOrWhiteSpace(Class) ? "form-control" : Class;
             string readonlyAttr = ReadOnly ? "readonly" : "";
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
 
 
 
@@ -147,6 +173,7 @@ namespace GridView.ViewModel
             id='{Id}'
             type='text'
             class='{inputClass}'
+            {onChangeAttr}
             placeholder='{Placeholder}'
             name='{Name}'
             value='{Value}'
@@ -255,6 +282,8 @@ namespace GridView.ViewModel
 
         protected override string RenderElementHtml()
         {
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
+
             string cls = string.IsNullOrWhiteSpace(Class) ? "form-select" : Class;
             if (UseSelect2) cls += " select2";
 
@@ -265,7 +294,7 @@ namespace GridView.ViewModel
             // اضافه کردن ویژگی‌های ولیدیشن در صورت فعال بودن
             string validationAttrs = EnableValidation ? RenderValidationAttributes() : "";
 
-            return $"<select id='{Id}' name='{Name}' class='{cls}' style='{style}' {validationAttrs}>{optionsHtml}</select>";
+            return $"<select id='{Id}' name='{Name}'  {onChangeAttr} class='{cls}' style='{style}' {validationAttrs}>{optionsHtml}</select>";
         }
     }
 
@@ -282,9 +311,10 @@ namespace GridView.ViewModel
             string cls = string.IsNullOrWhiteSpace(Class) ? "form-check-input" : Class;
 
             string isChecked = Checked ? "checked" : "";
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
 
             string inputHtml =
-                $"<input type='checkbox' value='{Value}' id='{Id}' {RenderAttributes()} " +
+                $"<input type='checkbox' {onChangeAttr} value='{Value}' id='{Id}' {RenderAttributes()} " +
                 $"class='{cls}' {isChecked} {RenderValidationAttributes()} />";
 
             string labelHtml = !string.IsNullOrWhiteSpace(Label)
@@ -309,7 +339,9 @@ namespace GridView.ViewModel
         {
             string cls = string.IsNullOrWhiteSpace(Class) ? "form-check-input" : Class;
             string isChecked = Checked ? "checked" : "";
-            return $"<input type='radio' value='{Value}' {RenderAttributes()} class='{cls}' {isChecked} {RenderValidationAttributes()} />";
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
+
+            return $"<input type='radio' {onChangeAttr} value='{Value}' {RenderAttributes()} class='{cls}' {isChecked} {RenderValidationAttributes()} />";
         }
     }
     public class Button : HtmlElement
@@ -343,7 +375,7 @@ namespace GridView.ViewModel
                     : $"<i class='{Icon}'></i> ";
             }
 
-            return $"<button id='{Id}' type='{Type}' class='{cls}' {onclickAttr}>{iconHtml}{Text}</button>";
+            return $"<button id='{Id}' type='{Type}' class='{cls}' {onclickAttr} >{iconHtml}{Text}</button>";
         }
     }
 
@@ -353,8 +385,10 @@ namespace GridView.ViewModel
 
         protected override string RenderElementHtml()
         {
+            string onChangeAttr = string.IsNullOrWhiteSpace(OnChange) ? "" : $"onchange='{OnChange}'";
+
             string cls = string.IsNullOrWhiteSpace(Class) ? "form-control datepicker" : Class;
-            return $"<input type='text' value='{Value}' {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
+            return $"<input type='text' {onChangeAttr} value='{Value}' {RenderAttributes()} class='{cls}' {RenderValidationAttributes()} />";
         }
     }
 

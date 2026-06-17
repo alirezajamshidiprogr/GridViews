@@ -60,7 +60,7 @@ namespace GridView.Controllers
             }
 
             // ساخت query با Include برای روابط
-            var query = _context.ProductSales
+            IQueryable<ProductSaleDto> query = _context.ProductSales
                 .Select(ps => new ProductSaleDto
                 {
                     Id = ps.Id,
@@ -86,6 +86,7 @@ namespace GridView.Controllers
 
             // صدا زدن متد EF Core Grid
             var result = await GridExtensions.GetGridDataEfCoreAsync(query);
+            var result2 =  GridExtensions.GetListDataInMemory(query.ToList());
 
             return Json(result);
         }

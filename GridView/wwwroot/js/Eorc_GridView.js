@@ -38,7 +38,7 @@ function exportGridToPdf(gridName) {
     }
 
     const rows = gridBody.querySelectorAll(".grid-row");
-    if (rows.length > 1000) {
+    if (rows.length > 10000) {
         alert("تعداد رکوردها بیش از حد مجاز است.");
         return;
     }
@@ -690,7 +690,7 @@ function exportGridToExcelXlsx(gridName) {
     if (!grid.length) return alert('گرید مورد نظر پیدا نشد!');
 
     var rows = grid.find('.grid-row');
-    if (rows.length > 1000) return alert('تعداد رکوردها بیش از حد مجاز است.');
+    if (rows.length > 10000) return alert('تعداد رکوردها بیش از حد مجاز است.');
 
     var columns = grid.find('.grid-header .grid-cell').filter(function () {
         var text = $(this).clone().children().remove().end().text().trim().toLowerCase();
@@ -1406,7 +1406,7 @@ async function fetchGridData(page, size, customBody = null, gridName = null) {
         };
 
         const encodedGridRequest = btoa(unescape(encodeURIComponent(JSON.stringify(gridRequest))));
-        const bodyToSend = customBody || gridState.customRequestBody || {};
+        const bodyToSend = gridState.customRequestBody || customBody ||  {};
 
 
         fetch(urlElement.dataset.url, {
